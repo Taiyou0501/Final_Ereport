@@ -7,8 +7,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-
-
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
@@ -35,7 +33,10 @@ const LocationMarker = () => {
     );
 };
 
-
+const legazpiBounds = [
+    [13.1000, 123.7000], // Southwest coordinates
+    [13.2000, 123.8000]  // Northeast coordinates
+];
 
 const Dashboard = () => {
     const [isActive, setIsActive] = useState(false);
@@ -108,17 +109,16 @@ const Dashboard = () => {
             <div className="index-tabs-responder">
                 <div className="parent-container">
                     <div id="map" className="map-container">
-                    <MapContainer 
-                    center={[13.23529975,123.77665575000002]} 
-                    zoom={20} 
-                    style={{ height: '100vh', width: '100vh' }}
-                    scrollWheelZoom={true}>
-                        <TileLayer
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        />
-                        <LocationMarker />
-                    </MapContainer>
+                        <MapContainer 
+                            bounds={legazpiBounds}
+                            style={{ height: '100vh', width: '100vh' }}
+                            scrollWheelZoom={true}>
+                            <TileLayer
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            />
+                            <LocationMarker />
+                        </MapContainer>
                     </div>
                 </div>
                 <div className="responder-situation">

@@ -34,6 +34,10 @@ const LocationMarker = () => {
         </Marker>
     );
 };
+const legazpiBounds = [
+    [13.1000, 123.7000], // Southwest coordinates
+    [13.2000, 123.8000]  // Northeast coordinates
+  ];
 
 const BarangayHome = () => {
     const [isActive, setIsActive] = useState(false);
@@ -107,8 +111,9 @@ const BarangayHome = () => {
                 <div className="parent-container">
                     <div id="map" className="map-container">
                     <MapContainer 
-                    center={[13.23529975,123.77665575000002]} 
-                    zoom={20} 
+                    bounds={legazpiBounds}
+                    maxBounds={legazpiBounds}
+                    maxBoundsViscosity={1.0}
                     style={{ height: '100vh', width: '100vh' }}
                     scrollWheelZoom={true}>
                         <TileLayer

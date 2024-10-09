@@ -14,27 +14,96 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-const LocationMarker = () => {
-    const [position, setPosition] = useState(null);
-    const map = useMapEvents({
-        click() {
-            map.locate();
-        },
-        locationfound(e) {
-            setPosition(e.latlng);
-            map.flyTo(e.latlng, map.getZoom());
-        },
-    });
+const getRandomLatLng = (bounds) => {
+  const latMin = bounds.getSouthWest().lat;
+  const latMax = bounds.getNorthEast().lat;
+  const lngMin = bounds.getSouthWest().lng;
+  const lngMax = bounds.getNorthEast().lng;
 
-    return position === null ? null : (
-        <Marker position={position}>
-            <Popup>You are here</Popup>
-        </Marker>
-    );
+  const lat = latMin + Math.random() * (latMax - latMin);
+  const lng = lngMin + Math.random() * (lngMax - lngMin);
+
+  return { lat, lng };
 };
 
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
+};
 
+const LocationMarker = () => {
+  const [position, setPosition] = useState(null);
+  const [accidentPositions, setAccidentPositions] = useState([]);
+  const [closestAccident, setClosestAccident] = useState(null);
+
+  const map = useMapEvents({
+      click() {
+          map.locate();
+      },
+      locationfound(e) {
+          setPosition(e.latlng);
+         
+
+
+          // Generate 3 random accident locations within the map bounds
+          const bounds = map.getBounds();
+          const accidents = Array.from({ length: 3 }, () => getRandomLatLng(bounds));
+          setAccidentPositions(accidents);
+
+          // Calculate the closest accident
+          let minDistance = Infinity;
+          let closest = null;
+          accidents.forEach(accident => {
+              const distance = calculateDistance(e.latlng.lat, e.latlng.lng, accident.lat, accident.lng);
+              if (distance < minDistance) {
+                  minDistance = distance;
+                  closest = accident;
+              }
+          });
+          setClosestAccident(closest);
+      },
+  });
+
+  const closestAccidentIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: '<div style="color: red; font-weight: bold;">Closest Location</div>',
+    iconSize: [200, 40],
+    iconAnchor: [50, 20]
+});
+
+  
+
+  return (
+      <>
+          {position && (
+              <Marker position={position}>
+                  <Popup>You are here</Popup>
+              </Marker>
+          )}
+          {accidentPositions.map((accident, index) => (
+              <Marker key={index} position={accident}>
+                  <Popup>Accident Location</Popup>
+              </Marker>
+          ))}
+          {closestAccident && (
+              <Marker position={closestAccident} icon={closestAccidentIcon}>
+                  <Popup>Closest Accident Location</Popup>
+              </Marker>
+          )}
+      </>
+  );
+};
+
+const legazpiBounds = [
+    [13.1000, 123.7000], // Southwest coordinates
+    [13.2000, 123.8000]  // Northeast coordinates
+  ];
+
+const center = [
+    (legazpiBounds[0][0] + legazpiBounds[1][0]) / 2,
+    (legazpiBounds[0][1] + legazpiBounds[1][1]) / 2
+]
 const AdminHome = () => {
+  
   return (
     <div className="body">
       <nav className="sidebar">
@@ -92,16 +161,21 @@ const AdminHome = () => {
         <div className="text">Welcome, Admin</div>
         <div className="tabs-admin">
           <div className="home-wrapper"> 
-          <MapContainer 
-                    center={[13.1388596,123.7343104]} 
-                    zoom={17} 
-                    style={{ height: '100%', width: '100%' }}
-                    scrollWheelZoom={true}>
-                        <TileLayer
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        />
-                        <LocationMarker />
+          <MapContainer
+              center={center}
+              zoom={17}
+              minZoom={13}
+              maxZoom={17}
+              bounds={legazpiBounds}
+              maxBounds={legazpiBounds}
+              maxBoundsViscosity={1.0}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={true}>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              <LocationMarker />
             </MapContainer>
           </div>
         </div>

@@ -587,9 +587,13 @@ input {
   .notif-picture-container {
     margin-top: 5vw !important;
     width: 90vw !important;
-    height: 50vw !important;
+    height: 100vw !important;
   }
   .menu-btn {
     font-size: 6vw;
+  }
+  .small-image {
+    width: 350px; /* Adjust the width as needed */
+    height: auto; /* Maintain aspect ratio */
   }
 }/*# sourceMappingURL=user.css.map */

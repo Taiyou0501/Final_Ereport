@@ -19,7 +19,7 @@ const Login = () => {
         console.log(`Redirecting to dashboard for table: ${res.data.table}`);
         switch (res.data.table) {
           case 'admin_details':
-            window.location.href = "/a-dashboard";
+            window.location.href = "/a-home";
             break;
           case 'user_details':
             window.location.href = "/user";
@@ -31,7 +31,7 @@ const Login = () => {
             window.location.href = "/responder-home";
             break;
           case 'unit_details':
-            window.location.href = "/u-dashboard";
+            window.location.href = "/u-home";
             break;
           case 'barangay_details':
             window.location.href = "/barangay-home";

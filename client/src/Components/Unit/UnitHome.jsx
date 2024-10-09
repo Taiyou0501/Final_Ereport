@@ -33,6 +33,10 @@ const LocationMarker = () => {
     );
 };
 
+const legazpiBounds = [
+  [13.1000, 123.7000], // Southwest coordinates
+  [13.2000, 123.8000]  // Northeast coordinates
+];
 
 
 const UnitDashboard = () => {
@@ -88,8 +92,9 @@ const UnitDashboard = () => {
         <div className="tabs-admin">
           <div className="home-wrapper">  
           <MapContainer 
-                    center={[13.1388596,123.7343104]} 
-                    zoom={20} 
+                    bounds={legazpiBounds}
+                    maxBounds={legazpiBounds}
+                    maxBoundsViscosity={1.0}
                     style={{ height: '100%', width: '100%' }}
                     scrollWheelZoom={true}>
                         <TileLayer

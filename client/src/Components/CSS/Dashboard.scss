@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 :root{
   --background: #e4e9f7;
   --sidebar-color: #fff;
@@ -11,24 +13,27 @@
 }
 
 .body{
+  display: flex;
+  position: relative;
   height: 100vh;
-  width: 100%;
   background: var(--background);
 }
 
 .map-container {
+  flex-grow: 1;
   position: relative;
+}
+
+.map {
   width: 100%;
-  height: 80vh;
+  height: 100%;
 }
 
 .sidebar{
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: absolute;
   height:100%;
   width: 275px;
-  padding: 10px 14px;
+  padding: 20px;
   background: var(--sidebar-color);
   transition: 0.5s;
   z-index: 100;
@@ -172,11 +177,14 @@ header .image-text .logo-title{
   position: relative;
   width: 1400px;
   height: 700px;
-  background:var(--sidebar-color);
+  background: var(--sidebar-color);
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* Ensure content stacks vertically */
+  justify-content: flex-start; /* Align content to the top */
   align-items: center;
   margin: 25px;
+  overflow: auto; /* Allow scrolling if content overflows */
+  padding: 20px;
 }
 
 .tabs-admin-accounts{
@@ -357,9 +365,37 @@ header .image-text .logo-title{
   color: var(--background);
 }
 
+.table-header {
+  font-size: 20px; /* Increase font size */
+  padding: 10px 0; /* Add spacing between header elements */
+  text-align: left; /* Optional: Align text to the left */
+}
 
+.table-header th {
+  padding: 20px; /* Add padding to each header cell */
+}
 
+.table-body td {
+  font-size: 18px; /* Increase font size for table body */
+  padding: 10px; /* Add padding to each table cell */
+}
 
+.table-body tr:hover {
+  text-decoration: underline; /* Underline text on hover */
+  cursor: pointer;
+}
+
+.report-details p {
+  font-size: 18px; /* Increase font size */
+  margin-bottom: 10px; /* Add spacing between paragraphs */
+}
+
+.small-image {
+  max-width: 100%; /* Ensure the image does not exceed the width of its container */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 10px; /* Optional: Add some styling */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add some shadow */
+}
 
 
 

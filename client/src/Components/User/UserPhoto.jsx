@@ -4,9 +4,11 @@ import { faBars, faUser, faPowerOff, faCamera } from '@fortawesome/free-solid-sv
 import React, { useRef, useState, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
+import { isMobile } from 'react-device-detect';
 
 const UserIndex = () => {
   const webcamRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const navigate = useNavigate();
@@ -24,10 +26,12 @@ const UserIndex = () => {
         },
         (error) => {
           console.error('Error getting location:', error);
+          alert('Error getting location: ' + error.message);
         }
       );
     } else {
       console.error('Geolocation is not supported by this browser.');
+      alert('Geolocation is not supported by this browser.');
     }
   }, [webcamRef]);
 
@@ -36,12 +40,56 @@ const UserIndex = () => {
     setLocation({ latitude: null, longitude: null });
   };
 
-  const acceptPhoto = () => {
+  const uploadImage = async (image, location) => {
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('latitude', location.latitude);
+    formData.append('longitude', location.longitude);
+
+    try {
+      const response = await fetch('http://localhost:8081/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      console.log('Image uploaded successfully:', data);
+      return data.filePath;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Error uploading image: ' + error.message);
+    }
+  };
+
+  const acceptPhoto = async () => {
     console.log('Photo accepted:', capturedImage);
     console.log('Location:', location);
-    window.alert(`Photo accepted! Location: Latitude ${location.latitude}, Longitude ${location.longitude}`);
-    window.location.href = '/user-emergency-type';
-    // Handle the accepted photo (e.g., upload to server)
+
+    // Convert the base64 image to a Blob
+    const byteString = atob(capturedImage.split(',')[1]);
+    const mimeString = capturedImage.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeString });
+
+    // Upload the image
+    const filePath = await uploadImage(blob, location);
+
+    if (filePath) {
+      window.alert(`Photo accepted! Location: Latitude ${location.latitude}, Longitude ${location.longitude}`);
+      window.location.href = '/user-emergency-type';
+    }
+  };
+
+  const openMobileCamera = () => {
+    fileInputRef.current.click();
   };
 
   return (
@@ -68,24 +116,65 @@ const UserIndex = () => {
         {!capturedImage ? (
           <>
             <div className="camera-container">
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                width="100%"
-                height="100%"
-              />
+              {isMobile ? (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setCapturedImage(reader.result);
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              const { latitude, longitude } = position.coords;
+                              setLocation({ latitude, longitude });
+                              console.log('Location:', { latitude, longitude });
+                            },
+                            (error) => {
+                              console.error('Error getting location:', error);
+                              alert('Error getting location: ' + error.message);
+                            }
+                          );
+                        } else {
+                          console.error('Geolocation is not supported by this browser.');
+                          alert('Geolocation is not supported by this browser.');
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <button className="capture-btn" onClick={openMobileCamera}>
+                    <FontAwesomeIcon icon={faCamera} />
+                  </button>
+                </>
+              ) : (
+                <Webcam
+                  audio={false}
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  width="100%"
+                  height="100%"
+                />
+              )}
             </div>
             <div className="capture-btn-container">
-              <button className="capture-btn" onClick={capture}>
-                <FontAwesomeIcon icon={faCamera} />
-              </button>
+              {!isMobile && (
+                <button className="capture-btn" onClick={capture}>
+                  <FontAwesomeIcon icon={faCamera} />
+                </button>
+              )}
               <p className="capture-text">CAPTURE THE EMERGENCY SCENE</p>
             </div>
           </>
         ) : (
           <div className="preview-container">
-            <img src={capturedImage} alt="Captured" className="captured-image" />
+            <img src={capturedImage} alt="Captured" className="captured-image small-image" />
             <div className="preview-btn-container">
               <button className="retake-btn" onClick={retakePhoto}>Retake</button>
               <button className="accept-btn" onClick={acceptPhoto}>Accept</button>
