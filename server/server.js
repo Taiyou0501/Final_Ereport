@@ -399,9 +399,9 @@ app.get('/api/reports/latest', (req, res) => {
 });
 
 app.post('/api/full_report', (req, res) => {
-  const { victim, reporterId, type, latitude, longitude, description, uploadedAt, imageUrl } = req.body;
-  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, description, uploadedAt, imageUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  db.query(sql, [victim, reporterId, type, latitude, longitude, description, uploadedAt, imageUrl], (err, result) => {
+  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl } = req.body;
+  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?)';
+  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl], (err, result) => {
     if (err) {
       console.error('Error inserting full report:', err);
       return res.status(500).json({ message: 'Error inserting full report' });

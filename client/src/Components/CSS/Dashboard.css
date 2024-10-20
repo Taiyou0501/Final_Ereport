@@ -14,7 +14,8 @@
 .body {
   display: flex;
   position: relative;
-  height: 100vh;
+  height: 100%;
+  width: 100%;
   background: var(--background);
 }
 
@@ -166,8 +167,8 @@ header .image-text .logo-title {
 
 .tabs-admin {
   position: relative;
-  width: 1500px;
-  height: 800px;
+  width: 1325px;
+  height: 700px;
   border-radius: 50px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -178,22 +179,23 @@ header .image-text .logo-title {
 
 .home .tabs-admin .home-wrapper {
   position: relative;
-  width: 1400px;
-  height: 700px;
+  width: 1250px;
+  height: 675px;
   background: var(--sidebar-color);
   display: flex;
   flex-direction: column; /* Ensure content stacks vertically */
   justify-content: flex-start; /* Align content to the top */
   align-items: center;
   margin: 25px;
+  border-radius: 50px;
   overflow: auto; /* Allow scrolling if content overflows */
   padding: 20px;
 }
 
 .tabs-admin-accounts {
   position: relative;
-  width: 1500px;
-  height: 800px;
+  width: 1325px;
+  height: 700px;
   border-radius: 50px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -204,8 +206,8 @@ header .image-text .logo-title {
 
 .home .tabs-admin-accounts .home-wrapper {
   position: relative;
-  width: 1400px;
-  height: 700px;
+  width: 1250px;
+  height: 675px;
   background: var(--sidebar-color);
   display: flex;
   justify-content: center;
@@ -227,8 +229,8 @@ header .image-text .logo-title {
 
 .home .tabs-add-unit {
   position: relative;
-  width: 1500px;
-  height: 800px;
+  width: 1325px;
+  height: 700px;
   border-radius: 50px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -256,8 +258,8 @@ header .image-text .logo-title {
 
 .home .tabs-add-barangay {
   position: relative;
-  width: 1500px;
-  height: 800px;
+  width: 1325px;
+  height: 700px;
   border-radius: 50px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -285,8 +287,8 @@ header .image-text .logo-title {
 
 .home .tabs-add-police {
   position: relative;
-  width: 1500px;
-  height: 800px;
+  width: 1325px;
+  height: 700px;
   border-radius: 50px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -314,8 +316,8 @@ header .image-text .logo-title {
 
 .home .tabs-profile {
   position: relative;
-  width: 1500px;
-  height: 800px;
+  width: 1325px;
+  height: 700px;
   border-radius: 50px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import moment from 'moment';
 
 const UserIndex = () => {
   const navigate = useNavigate();
@@ -13,12 +14,14 @@ const UserIndex = () => {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [uploadedAt, setUploadedAt] = useState('');
+  const [originalUploadedAt, setOriginalUploadedAt] = useState(''); // Store the original uploadedAt
   const [holdText, setHoldText] = useState("FINDING NEAREST RESPONDER...");
   const [clickCount, setClickCount] = useState(0);
   const [fadeClass, setFadeClass] = useState('');
   const [report, setReport] = useState(null);
   const [hasSaved, setHasSaved] = useState(false); // Track if save operation has been performed
   const [notification, setNotification] = useState(''); // State for notification message
+  const [location, setLocation] = useState(''); // State to store the place name
 
   const handleNextClick = () => {
     setFadeClass('fade-out');
@@ -42,8 +45,8 @@ const UserIndex = () => {
 
   const handleSaveClick = async () => {
     try {
-      // Format the uploadedAt date before sending it to the backend
-      const formattedUploadedAt = new Date(uploadedAt).toISOString();
+      // Subtract 4 hours from the uploadedAt date before formatting it to an ISO string
+      const adjustedUploadedAt = moment(uploadedAt).subtract(4, 'hours').toISOString();
 
       const fullReportData = {
         victim: 'N/A', // Replace with actual victim data if available
@@ -51,8 +54,9 @@ const UserIndex = () => {
         type: report ? report.type : '[Accident Type]',
         latitude,
         longitude,
+        location, // Include the location in the data sent to the backend
         description: report ? report.description : '[Insert Description]',
-        uploadedAt: formattedUploadedAt,
+        uploadedAt: adjustedUploadedAt,
         imageUrl: filePath // Use the original filePath
       };
 
@@ -62,8 +66,8 @@ const UserIndex = () => {
       // Set notification message
       setNotification('Data saved successfully!');
 
-      // Reformat the date back to a human-readable format
-      setUploadedAt(new Date(formattedUploadedAt).toLocaleString());
+      // Reformat the date back to its original format
+      setUploadedAt(originalUploadedAt);
     } catch (error) {
       console.error('Error saving full report:', error);
       setNotification('Error saving data. Please try again.');
@@ -75,6 +79,26 @@ const UserIndex = () => {
     if (!hasSaved) {
       await handleSaveClick();
       setHasSaved(true);
+    }
+  };
+
+  const fetchPlaceName = async (latitude, longitude) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch place name');
+      }
+      const data = await response.json();
+      if (data && data.display_name) {
+        setLocation(data.display_name);
+      } else {
+        setLocation('Unknown location');
+      }
+    } catch (error) {
+      console.error('Error fetching place name:', error);
+      setLocation('Error fetching location');
     }
   };
 
@@ -108,7 +132,10 @@ const UserIndex = () => {
           setFilePath(data.filePath); // Store the original filePath
           setLatitude(data.latitude);
           setLongitude(data.longitude);
-          setUploadedAt(new Date(data.uploadedAt).toLocaleString());
+          const originalDate = new Date(data.uploadedAt).toLocaleString();
+          setUploadedAt(originalDate);
+          setOriginalUploadedAt(originalDate); // Store the original uploadedAt
+          fetchPlaceName(data.latitude, data.longitude); // Fetch place name based on coordinates
         } catch (error) {
           console.error('Error fetching image details:', error);
         }
@@ -165,7 +192,8 @@ const UserIndex = () => {
               <p className="d1">Victim: N/A</p>
               <p className="d2">Reporter ID: [Insert Reporter ID]</p>
               <p className="d3">Type: {report ? report.type : '[Accident Type]'}</p>
-              <p className="d4">Location: Latitude: {latitude}, Longitude: {longitude}</p>
+              <p className="d4">Location: {location}</p>
+              <p className="d4">Latitude: {latitude}, Longitude: {longitude}</p>
               <p className="d5">Description: {report ? report.description : '[Insert Description]'}</p>
               <p className="d6">Date/Time: {uploadedAt}</p>
             </div>

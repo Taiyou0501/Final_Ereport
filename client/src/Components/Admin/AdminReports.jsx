@@ -8,6 +8,8 @@ import axios from 'axios';
 const AdminReports = () => {
   const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [filterType, setFilterType] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -25,6 +27,20 @@ const AdminReports = () => {
   const handleRowClick = (report) => {
     setSelectedReport(report);
   };
+
+  const handleFilterTypeChange = (event) => {
+    setFilterType(event.target.value);
+  };
+
+  const handleFilterDateChange = (event) => {
+    setFilterDate(event.target.value);
+  };
+
+  const filteredReports = reports.filter(report => {
+    const matchesType = filterType ? report.type === filterType : true;
+    const matchesDate = filterDate ? new Date(report.uploadedAt).toLocaleDateString() === new Date(filterDate).toLocaleDateString() : true;
+    return matchesType && matchesDate;
+  });
 
   return (
     <div className="body">
@@ -91,7 +107,8 @@ const AdminReports = () => {
                 <p><strong>Reporter ID:</strong> {selectedReport.reporterId}</p>
                 <p><strong>Description:</strong> {selectedReport.description}</p>
                 <p><strong>Type:</strong> {selectedReport.type}</p>
-                <p><strong>Location:</strong> Latitude: {selectedReport.latitude}, Longitude: {selectedReport.longitude}</p>
+                <p><strong>Location:</strong> {selectedReport.location}</p>
+                <p><strong>Coordinates:</strong> Latitude: {selectedReport.latitude}, Longitude: {selectedReport.longitude}</p>
                 <p><strong>Date/Time:</strong> {new Date(selectedReport.uploadedAt).toLocaleString()}</p>
                 {selectedReport.imageUrl && (
                   <div>
@@ -101,26 +118,46 @@ const AdminReports = () => {
                 <button onClick={() => setSelectedReport(null)}>Back to Reports</button>
               </div>
             ) : (
-              <table>
-                <thead className="table-header">
-                  <tr>
-                    <th>ID</th>
-                    <th>Description</th>
-                    <th>Type</th>
-                    <th>Date/Time</th>
-                  </tr>
-                </thead>
-                <tbody className="table-body">
-                  {reports.map((report) => (
-                    <tr key={report.id} onClick={() => handleRowClick(report)}>
-                      <td>{report.id}</td>
-                      <td>{report.description}</td>
-                      <td>{report.type}</td>
-                      <td>{new Date(report.uploadedAt).toLocaleString()}</td>
+              <div>
+                <div className="filters">
+                  <label>
+                    Filter by Type:
+                    <select value={filterType} onChange={handleFilterTypeChange}>
+                      <option value="">All</option>
+                      <option value="Injured Individual">Injured Individual</option>
+                      <option value="Fire Emergency">Fire Emergency</option>
+                      <option value="Vehicular Accident">Vehicular Accident</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </label>
+                  <label>
+                    Filter by Date:
+                    <input type="date" value={filterDate} onChange={handleFilterDateChange} />
+                  </label>
+                </div>
+                <table>
+                  <thead className="table-header">
+                    <tr>
+                      <th>ID</th>
+                      <th>Description</th>
+                      <th>Type</th>
+                      <th>Location</th>
+                      <th>Date/Time</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="table-body">
+                    {filteredReports.map((report) => (
+                      <tr key={report.id} onClick={() => handleRowClick(report)}>
+                        <td>{report.id}</td>
+                        <td>{report.description}</td>
+                        <td>{report.type}</td>
+                        <td>{report.location}</td>
+                        <td>{new Date(report.uploadedAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

@@ -11,6 +11,7 @@ const UserIndex = () => {
   const fileInputRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
+  const [placeName, setPlaceName] = useState(''); // State to store the place name
   const navigate = useNavigate();
 
   const capture = useCallback(() => {
@@ -23,6 +24,7 @@ const UserIndex = () => {
           const { latitude, longitude } = position.coords;
           setLocation({ latitude, longitude });
           console.log('Location:', { latitude, longitude });
+          fetchPlaceName(latitude, longitude); // Fetch place name based on coordinates
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -35,9 +37,30 @@ const UserIndex = () => {
     }
   }, [webcamRef]);
 
+  const fetchPlaceName = async (latitude, longitude) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch place name');
+      }
+      const data = await response.json();
+      if (data && data.display_name) {
+        setPlaceName(data.display_name);
+      } else {
+        setPlaceName('Unknown location');
+      }
+    } catch (error) {
+      console.error('Error fetching place name:', error);
+      setPlaceName('Error fetching location');
+    }
+  };
+
   const retakePhoto = () => {
     setCapturedImage(null);
     setLocation({ latitude: null, longitude: null });
+    setPlaceName(''); // Reset place name
   };
 
   const uploadImage = async (image, location) => {
@@ -83,7 +106,7 @@ const UserIndex = () => {
     const filePath = await uploadImage(blob, location);
 
     if (filePath) {
-      window.alert(`Photo accepted! Location: Latitude ${location.latitude}, Longitude ${location.longitude}`);
+      window.alert(`Photo accepted! Location: ${placeName}`);
       window.location.href = '/user-emergency-type';
     }
   };
@@ -135,6 +158,7 @@ const UserIndex = () => {
                               const { latitude, longitude } = position.coords;
                               setLocation({ latitude, longitude });
                               console.log('Location:', { latitude, longitude });
+                              fetchPlaceName(latitude, longitude); // Fetch place name based on coordinates
                             },
                             (error) => {
                               console.error('Error getting location:', error);
@@ -176,13 +200,14 @@ const UserIndex = () => {
           <div className="preview-container">
             <img src={capturedImage} alt="Captured" className="captured-image small-image" />
             <div className="preview-btn-container">
-              <button className="retake-btn" onClick={retakePhoto}>Retake</button>
-              <button className="accept-btn" onClick={acceptPhoto}>Accept</button>
+              <button className="btn retake-btn" onClick={retakePhoto}>Retake</button>
+              <button className="btn accept-btn" onClick={acceptPhoto}>Accept</button>
             </div>
             <div className="location-info">
               <p>Location Information:</p>
               <p>Latitude: {location.latitude}</p>
               <p>Longitude: {location.longitude}</p>
+              <p>Place: {placeName}</p> {/* Display the place name */}
             </div>
           </div>
         )}

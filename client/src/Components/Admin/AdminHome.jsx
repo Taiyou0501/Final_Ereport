@@ -41,8 +41,7 @@ const LocationMarker = () => {
       },
       locationfound(e) {
           setPosition(e.latlng);
-         
-
+        
 
           // Generate 3 random accident locations within the map bounds
           const bounds = map.getBounds();

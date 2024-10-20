@@ -336,7 +336,8 @@
 .specify-ii-btn:active,
 .idk-btn:active,
 .submit-btn:active,
-.back-btn:active .menu-btn:active {
+.back-btn:active,
+.menu-btn:active {
   transform: scale(0.9);
 }
 
@@ -419,6 +420,57 @@ input {
   bottom: 2vw;
 }
 
+.btn {
+  padding: 20px 40px; /* Increase padding */
+  margin: 10px;
+  font-size: 20px; /* Increase font size */
+  font-family: "Russo One", Helvetica, sans-serif;
+  border: none;
+  border-radius: 10px; /* Increase border radius */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add box shadow */
+}
+
+.retake-btn {
+  background-color: #f44336; /* Red */
+  color: white;
+}
+
+.retake-btn:hover {
+  background-color: #d32f2f; /* Darker red */
+  transform: scale(1.1);
+}
+
+.accept-btn {
+  background-color: #4caf50; /* Green */
+  color: white;
+}
+
+.accept-btn:hover {
+  background-color: #388e3c; /* Darker green */
+  transform: scale(1.1);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.6);
+}
+
+/* Center the buttons */
+.preview-btn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-direction: row; /* Stack buttons vertically */
+}
+
+/* Additional styles for mobile responsiveness */
 @media (max-width: 480px) and (orientation: portrait) {
   .index-reporter-header {
     height: 15vw !important;
@@ -593,7 +645,26 @@ input {
     font-size: 6vw;
   }
   .small-image {
-    width: 350px; /* Adjust the width as needed */
+    width: 100%; /* Adjust the width to be responsive */
+    height: auto; /* Maintain aspect ratio */
+  }
+  .btn {
+    padding: 15px 30px; /* Adjust padding for mobile */
+    font-size: 18px; /* Adjust font size for mobile */
+  }
+  .capture-btn {
+    font-size: 10vw !important;
+    padding: 7.5vw !important;
+    width: 10vw !important;
+    height: 10vw !important;
+  }
+  .menu-btn {
+    font-size: 6vw;
+  }
+}
+@media (min-width: 481px) and (orientation: landscape) {
+  .small-image {
+    width: 50%; /* Adjust the width to be responsive */
     height: auto; /* Maintain aspect ratio */
   }
 }/*# sourceMappingURL=user.css.map */

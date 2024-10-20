@@ -118,4 +118,45 @@ form .register-link-login {
 
 .register-link-login p a:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  .wrapper-login {
+    width: 90%;
+    height: auto;
+    padding: 20px;
+  }
+  form h1 {
+    font-size: 28px;
+  }
+  .inputbox-login {
+    height: 45px;
+    margin: 20px 0;
+  }
+  .inputbox-login input {
+    font-size: 17px !important;
+    padding: 15px 40px 15px 15px;
+  }
+  .inputbox-login .icon {
+    font-size: 1em;
+  }
+  .remember-forgot-login {
+    font-size: 12px;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .remember-forgot-login a {
+    margin-top: 11px;
+  }
+  form .register-link-login {
+    font-size: 15px;
+  }
+  .register-link-login p {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+  }
+  .register-link-login p a {
+    margin-top: 5px;
+  }
 }/*# sourceMappingURL=Login.css.map */
