@@ -4,11 +4,22 @@ const cors = require('cors');
 const e = require('express');
 const multer = require('multer');
 const path = require('path');
+const session = require('express-session');
 
 const app = express()
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
+
+app.use(session({
+  secret: 'Te8LtamAsYFGxL6aS/VA2z1l/mQICv8rdX/YjX59C2o=',
+  resave: false,
+  saveUnitialized: true,
+  cookie: { secure: false }
+}))
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -92,12 +103,25 @@ app.post('/checkAllTables', (req, res) => {
   tables.forEach((table, index) => {
     const query = `SELECT * FROM ${table} WHERE username = ? AND password = ?`;
     db.query(query, [username, password], (err, results) => {
-      if (err) throw err;
+      if (err) {
+        console.error(`Error querying table ${table}:`, err);
+        if (index === tables.length - 1 && !found) {
+          res.status(500).send({ message: "Error checking tables" });
+        }
+        return;
+      }
 
       if (results.length > 0) {
         found = true;
         console.log(`Found in table: ${table}`);
-        res.send({ message: "Login Successful", table });
+        req.session.user = { username, table }; // Store session data
+        req.session.save(err => {
+          if (err) {
+            console.error('Error saving session:', err);
+            return res.status(500).send({ message: "Error saving session" });
+          }
+          res.send({ message: "Login Successful", table, sessionId: req.sessionID });
+        });
       }
 
       if (index === tables.length - 1 && !found) {
@@ -105,6 +129,15 @@ app.post('/checkAllTables', (req, res) => {
         res.send({ message: "Invalid Credentials" });
       }
     });
+  });
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ message: 'Error logging out' });
+    }
+    res.send({ message: 'Logged out' });
   });
 });
 
@@ -419,6 +452,60 @@ app.get('/api/full_reports', (req, res) => {
     }
     res.status(200).json(results);
   });
+});
+
+app.get('/api/accounts', (req, res) => {
+  const tables = ['user_details', 'responder_details', 'unit_details', 'police_details', 'barangay_details'];
+  const results = {};
+
+  const fetchAccounts = (index) => {
+    if (index >= tables.length) {
+      console.log('Results:', results); // Log the results
+      return res.status(200).json(results);
+    }
+
+    const table = tables[index];
+    const sql = `SELECT id, username, email FROM ${table}`;
+    db.query(sql, (err, data) => {
+      if (err) {
+        console.error(`Error fetching accounts from ${table}:`, err);
+        return res.status(500).json({ message: `Error fetching accounts from ${table}` });
+      }
+      results[table] = data;
+      fetchAccounts(index + 1);
+    });
+  };
+
+  fetchAccounts(0);
+});
+
+app.get('/api/accounts/:table/:id', (req, res) => {
+  const { table, id } = req.params;
+  const validTables = ['user_details', 'responder_details', 'unit_details', 'police_details', 'barangay_details'];
+
+  if (!validTables.includes(table)) {
+    return res.status(400).json({ message: 'Invalid table name' });
+  }
+
+  const sql = `SELECT * FROM ${table} WHERE id = ?`;
+  db.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error(`Error fetching account details from ${table}:`, err);
+      return res.status(500).json({ message: `Error fetching account details from ${table}` });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Account not found' });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
+app.get('/checkSession', (req, res) => {
+  if (req.session.user) {
+    res.send({ isAuthenticated: true, user: req.session.user });
+  } else {
+    res.send({ isAuthenticated: false });
+  }
 });
 
 app.listen(8081, () => {

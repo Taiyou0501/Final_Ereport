@@ -4,6 +4,7 @@ import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
 import axios from 'axios';
+import Logout from "../../Logout";
 
 const AddUnit = () => {
   const [values, setValues] = useState({
@@ -83,12 +84,7 @@ const AddUnit = () => {
             </ul>
           </div>
           <div className="bottom-content">
-            <li className="nav-link">
-              <a href="/">
-              <FontAwesomeIcon icon={faRightToBracket} className="icon"/> 
-                <span className="text nav-text">Logout</span>
-              </a>
-            </li>
+          <Logout />
           </div>
         </div>
       </nav>

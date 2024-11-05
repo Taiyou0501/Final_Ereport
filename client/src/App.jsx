@@ -39,19 +39,21 @@ import{
   createBrowserRouter,
   RouterProvider
 } from 'react-router-dom'
+import { AuthProvider } from './auth/AuthContext'
+import ProtectedRoute from './auth/ProtectedRoute'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <div><Login/></div>
+    element: <Login/>
   },
   {
     path: '/login',
-    element: <div><Login/></div>
+    element: <Login/>
   },
   {
     path: '/register',
-    element: <div><Register/></div>
+    element: <Register/>
   },
   {
     path: '/a-dashboard',
@@ -185,17 +187,15 @@ const router = createBrowserRouter([
     path: '/barangay-notification',
     element: <div><BarangayNotification/></div>
   }
-
-
   
 ])
 
 function App() {
 
   return (
-    <div>
+    <AuthProvider>
       <RouterProvider router={router}/>
-    </div>
+    </AuthProvider>
    )
 }
 

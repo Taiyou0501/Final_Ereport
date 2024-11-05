@@ -4,11 +4,11 @@
   --background: #e4e9f7;
   --sidebar-color: #fff;
   --primary-color: #ff0000;
-  --primary-color-ligth: #f6fsff;
+  --primary-color-light: #f6fsff;
   --toggle-color: #ddd;
   --text-color: #707070;
   --active-color: #d5d2d2;
-  --button-color:#ff0000;
+  --button-color: #ff0000;
   --button-background: #000000;
 }
 
@@ -32,13 +32,12 @@
 
 .sidebar{
   position: absolute;
-  height:100%;
+  height: 100%;
   width: 275px;
   padding: 20px;
   background: var(--sidebar-color);
   transition: 0.5s;
   z-index: 100;
-  
 }
 
 .sidebar .image{
@@ -58,7 +57,7 @@
 
 .sidebar li{
   height: 50px;
-  margin-top: 10px ;
+  margin-top: 10px;
   list-style: none;
   display: flex;
   align-items: center;
@@ -222,10 +221,9 @@ header .image-text .logo-title{
   align-items: center;
   margin: 25px;
   cursor: pointer; 
-  
 }
 
-//Create Account UNit
+//Create Account Unit
 
 .home .tabs-add-unit{
   position: relative;
@@ -399,13 +397,111 @@ header .image-text .logo-title{
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add some shadow */
 }
 
+/* New styles for the account list section */
+.account-section {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.account-section strong {
+  display: block;
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: var(--button-background);
+}
+
+.account-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.account-section li {
+  padding: 10px;
+  border-bottom: 1px solid var(--text-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s, transform 0.3s;
+}
+.account-section li:hover {
+  background-color: var(--primary-color-light); /* Change background color on hover */
+  transform: scale(1.02); /* Slightly scale up on hover */
+}
 
 
+.account-section li span {
+  flex: 1;
+  text-align: left;
+}
 
+.account-section li span:first-child {
+  flex: 0.5;
+}
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
+.loading-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
+.modal-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+.search-bar {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
 
-
-
-
+.btn-back{
+  padding: 20px 25px; /* Increase padding */
+  margin: 10px;
+  font-size: 15px; /* Increase font size */
+  font-family: 'Russo One', Helvetica, sans-serif;
+  border: none;
+  border-radius: 20px; /* Increase border radius */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add box shadow */
+  background-color: #000000; /* Red */
+  color: white;
+}
+.btn-back:hover{
+  background-color: #d32f2f; /* Darker red */
+  transform: scale(1.1);
+}

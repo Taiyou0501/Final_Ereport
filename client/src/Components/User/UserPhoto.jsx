@@ -12,11 +12,13 @@ const UserIndex = () => {
   const [capturedImage, setCapturedImage] = useState(null);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [placeName, setPlaceName] = useState(''); // State to store the place name
+  const [loading, setLoading] = useState(false); // State to manage loading state
   const navigate = useNavigate();
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current.getScreenshot();
     setCapturedImage(imageSrc);
+    setLoading(true); // Set loading to true when capturing image
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -29,11 +31,13 @@ const UserIndex = () => {
         (error) => {
           console.error('Error getting location:', error);
           alert('Error getting location: ' + error.message);
+          setLoading(false); // Set loading to false if there's an error
         }
       );
     } else {
       console.error('Geolocation is not supported by this browser.');
       alert('Geolocation is not supported by this browser.');
+      setLoading(false); // Set loading to false if geolocation is not supported
     }
   }, [webcamRef]);
 
@@ -54,6 +58,8 @@ const UserIndex = () => {
     } catch (error) {
       console.error('Error fetching place name:', error);
       setPlaceName('Error fetching location');
+    } finally {
+      setLoading(false); // Set loading to false after fetching place name
     }
   };
 
@@ -61,6 +67,7 @@ const UserIndex = () => {
     setCapturedImage(null);
     setLocation({ latitude: null, longitude: null });
     setPlaceName(''); // Reset place name
+    setLoading(false); // Reset loading state
   };
 
   const uploadImage = async (image, location) => {
@@ -152,6 +159,7 @@ const UserIndex = () => {
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         setCapturedImage(reader.result);
+                        setLoading(true); // Set loading to true when capturing image
                         if (navigator.geolocation) {
                           navigator.geolocation.getCurrentPosition(
                             (position) => {
@@ -163,11 +171,13 @@ const UserIndex = () => {
                             (error) => {
                               console.error('Error getting location:', error);
                               alert('Error getting location: ' + error.message);
+                              setLoading(false); // Set loading to false if there's an error
                             }
                           );
                         } else {
                           console.error('Geolocation is not supported by this browser.');
                           alert('Geolocation is not supported by this browser.');
+                          setLoading(false); // Set loading to false if geolocation is not supported
                         }
                       };
                       reader.readAsDataURL(file);
@@ -212,6 +222,14 @@ const UserIndex = () => {
           </div>
         )}
       </div>
+
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-popup">
+            <p>Loading...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -22,6 +22,7 @@ const UserIndex = () => {
   const [hasSaved, setHasSaved] = useState(false); // Track if save operation has been performed
   const [notification, setNotification] = useState(''); // State for notification message
   const [location, setLocation] = useState(''); // State to store the place name
+  const [loading, setLoading] = useState(true); // State to manage loading
 
   const handleNextClick = () => {
     setFadeClass('fade-out');
@@ -138,6 +139,8 @@ const UserIndex = () => {
           fetchPlaceName(data.latitude, data.longitude); // Fetch place name based on coordinates
         } catch (error) {
           console.error('Error fetching image details:', error);
+        } finally {
+          setLoading(false); // Hide loading popup once data is fetched
         }
       }
     };
@@ -158,8 +161,12 @@ const UserIndex = () => {
     fetchLatestReport();
   }, []);
 
+  const handleNotificationClose = () => {
+    setNotification('');
+  };
+
   return (
-    <div className="index-responder-body">
+    <div className="index-responder-body" onClick={handleNotificationClose}>
       <header className="index-responder-header">
         <div className="index-main-text">E-REPORT</div>
       </header>
@@ -215,12 +222,23 @@ const UserIndex = () => {
             </button>
           )}
         </div>
-        {notification && (
-          <div className="notification">
-            {notification}
-          </div>
-        )}
       </div>
+
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-popup">
+            <p>Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {notification && (
+        <div className="notification-overlay" onClick={handleNotificationClose}>
+          <div className="notification-popup">
+            <p>{notification}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
