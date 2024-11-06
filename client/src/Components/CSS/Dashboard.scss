@@ -418,17 +418,17 @@ header .image-text .logo-title{
 
 .account-section li {
   padding: 10px;
-  border-bottom: 1px solid var(--text-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background-color 0.3s, transform 0.3s;
+  transition: background-color 0.3s, transform 0.3s, border-bottom 0.3s;
 }
+
 .account-section li:hover {
   background-color: var(--primary-color-light); /* Change background color on hover */
   transform: scale(1.02); /* Slightly scale up on hover */
+  border-bottom: 1px solid var(--text-color); /* Show border-bottom on hover */
 }
-
 
 .account-section li span {
   flex: 1;

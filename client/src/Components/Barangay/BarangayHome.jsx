@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import UserLogout from '../../UserLogout';
 
 
 
@@ -89,23 +90,7 @@ const BarangayHome = () => {
 
     return (
         <div className="index-responder-body">
-            <header className="index-responder-header">
-                <div className="index-main-text">E-REPORT</div>
-            </header>
-            <header className="index-header-tab">
-                <button className="index-menu-btn">
-                    <FontAwesomeIcon icon={faBars} />
-                    <span className="index-menu-text">HELLO, BRG. CAPTAIN</span>
-                </button>
-                <div className="index-responder-actions">
-                    <button className="index-profile-btn">
-                        <FontAwesomeIcon icon={faUser} />
-                    </button>
-                    <button className="index-logout-btn" onClick={() => navigate('/login')}>
-                        <FontAwesomeIcon icon={faPowerOff} />
-                    </button>
-                </div>
-            </header>
+            <UserLogout />
 
             <div className="index-tabs-responder">
                 <div className="parent-container">
@@ -145,7 +130,7 @@ const BarangayHome = () => {
                         >
                             Unavailable
                         </button>
-                        <button onClick={() => navigate('/barangay-notification')}>Next</button>
+                        <button onClick={() => navigate('/barangay/notification')}>Next</button>
                     </div>
                 </div>
             </div>

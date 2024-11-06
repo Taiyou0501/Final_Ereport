@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../CSS/Dashboard.css';
 import logo from '../Assets/newbackground.jpg';
 import ambulanceIcon from '../Assets/responder.png';
@@ -91,6 +92,11 @@ const center = [
 ];
 
 const AdminHome = () => {
+  const navigate = useNavigate();
+
+  const handleNavigation = (path) => {
+    navigate(path, { replace: true });
+  };
 
   return (
     <div className="body">
@@ -109,25 +115,25 @@ const AdminHome = () => {
           <div className="menu">
             <ul className="menu-links">
               <li className="nav-link">
-                <a href="a-home">
+              <a onClick={() => handleNavigation('/admin/home')}>
                   <FontAwesomeIcon icon={faHouse} className="icon" />
                   <span className="text nav-text">Home</span>
                 </a>
               </li>
               <li className="nav-link">
-                <a href="a-reports">
+              <a onClick={() => handleNavigation('/admin/reports')}>
                   <FontAwesomeIcon icon={faFile} className="icon" />
                   <span className="text nav-text">Reports</span>
                 </a>
               </li>
               <li className="nav-link">
-                <a href="a-accounts">
+                <a onClick={() => handleNavigation('/admin/accounts')}>
                   <FontAwesomeIcon icon={faUsers} className="icon" />
                   <span className="text nav-text">Accounts</span>
                 </a>
               </li>
               <li className="nav-link">
-                <a href="a-profile">
+                <a onClick={() => handleNavigation('/admin/profile')}>
                   <FontAwesomeIcon icon={faCircleUser} className="icon" />
                   <span className="text nav-text">Profile</span>
                 </a>

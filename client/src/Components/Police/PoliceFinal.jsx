@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React from 'react';
 import samplepic from '../Assets/sampleaccident.png';
+import UserLogout from '../../UserLogout';
 
 const PoliceFinal = () => {
     const navigate = useNavigate();
@@ -19,28 +20,12 @@ const PoliceFinal = () => {
 
     const handleBackToMainMenu = () => {
         localStorage.setItem('situationStatus', 'Unavailable');
-        navigate('/police-home');
+        navigate('/police/home');
     };
 
     return (
         <div className="index-responder-body">
-            <header className="index-responder-header">
-                <div className="index-main-text">E-REPORT</div>
-            </header>
-            <header className="index-header-tab">
-                <button className="index-menu-btn">
-                    <FontAwesomeIcon icon={faBars} />
-                    <span className="index-menu-text">HELLO, OFFICER</span>
-                </button>
-                <div className="index-responder-actions">
-                    <button className="index-profile-btn">
-                        <FontAwesomeIcon icon={faUser} />
-                    </button>
-                    <button className="index-logout-btn" onClick={() => navigate('/login')}>
-                        <FontAwesomeIcon icon={faPowerOff} />
-                    </button>
-                </div>
-            </header>
+            <UserLogout />
 
             <div className="index-tabs-responder">
                 <p className="final-text">You are now at the scene</p>

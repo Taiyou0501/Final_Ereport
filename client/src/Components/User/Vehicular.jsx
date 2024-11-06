@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
 import axios from 'axios';
+import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
   const navigate = useNavigate(); // Initialize navigate for routing
@@ -24,7 +25,7 @@ const UserIndex = () => {
           setSubmitted(true);
           setShowInput(false);
           // Redirect to a different route, e.g., /submission-success
-          navigate('/submission-success');
+          navigate('/user/submission-success');
         } catch (error) {
           console.error('Error submitting report:', error);
         }
@@ -50,7 +51,7 @@ const UserIndex = () => {
       });
       console.log('Submitted: Did not specify');
       setSubmitted(true);
-      navigate('/submission-success');
+      navigate('/user/submission-success');
     } catch (error) {
       console.error('Error submitting report:', error);
     }
@@ -58,23 +59,7 @@ const UserIndex = () => {
 
   return (
     <div className="index-responder-body">
-      <header className="index-responder-header">
-        <div className="index-main-text">E-REPORT</div>
-      </header>
-      <header className="index-header-tab">
-        <button className="index-menu-btn">
-          <FontAwesomeIcon icon={faBars} />
-          <span className="index-menu-text">HELLO, REPORTER</span>
-        </button>
-        <div className="index-responder-actions">
-          <button className="index-profile-btn">
-            <FontAwesomeIcon icon={faUser} />
-          </button>
-          <button className="index-logout-btn" onClick={() => navigate('/login')}>
-            <FontAwesomeIcon icon={faPowerOff} />
-          </button>
-        </div>
-      </header>
+      <UserLogout />
 
       <div className="index-tabs-responder">
         <p className="et-question">HOW MANY VEHICLES ARE INVOLVED?</p>

@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import samplepic from '../Assets/sampleaccident.png';
+import UserLogout from '../../UserLogout';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -50,23 +51,7 @@ const PoliceNotification = () => {
 
     return (
         <div className="index-responder-body">
-            <header className="index-responder-header">
-                <div className="index-main-text">E-REPORT</div>
-            </header>
-            <header className="index-header-tab">
-                <button className="index-menu-btn">
-                    <FontAwesomeIcon icon={faBars} />
-                    <span className="index-menu-text">HELLO, OFFICER</span>
-                </button>
-                <div className="index-responder-actions">
-                    <button className="index-profile-btn">
-                        <FontAwesomeIcon icon={faUser} />
-                    </button>
-                    <button className="index-logout-btn" onClick={() => navigate('/login')}>
-                        <FontAwesomeIcon icon={faPowerOff} />
-                    </button>
-                </div>
-            </header>
+            <UserLogout />
 
             <div className="index-tabs-responder">
                 <div className="parent-container">
@@ -114,7 +99,7 @@ const PoliceNotification = () => {
                         Responding to the scene...
                     </p>
                 </div>
-                <button onClick={() => navigate('/police-final')}>Next</button> {/* temporary */}
+                <button onClick={() => navigate('/police/final')}>Next</button> {/* temporary */}
             </div>
         </div>
     );

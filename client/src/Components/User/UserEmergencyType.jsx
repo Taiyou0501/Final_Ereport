@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const UserIndex = () => {
         type: 'Fire Emergency'
       });
       console.log('Fire emergency report submitted');
-      navigate('/submission-success');
+      navigate('/user/submission-success');
     } catch (error) {
       console.error('Error submitting fire emergency report:', error);
     }
@@ -22,34 +23,18 @@ const UserIndex = () => {
 
   return (
     <div className="index-responder-body">
-      <header className="index-responder-header">
-        <div className="index-main-text">E-REPORT</div>
-      </header>
-      <header className="index-header-tab">
-        <button className="index-menu-btn">
-          <FontAwesomeIcon icon={faBars} />
-          <span className="index-menu-text">HELLO, REPORTER</span>
-        </button>
-        <div className="index-responder-actions">
-          <button className="index-profile-btn">
-            <FontAwesomeIcon icon={faUser} />
-          </button>
-          <button className="index-logout-btn" onClick={() => navigate('/login')}>
-            <FontAwesomeIcon icon={faPowerOff} />
-          </button>
-        </div>
-      </header>
+      <UserLogout />
 
       <div className="index-tabs-responder">
         <p className="et-text">SELECT EMERGENCY TYPE:</p>
         <div className="emergency-type-container">
           <div className="et-individual">
-            <div className="et-image" onClick={() => navigate('/individual')}></div>
+            <div className="et-image" onClick={() => navigate('/user/individual')}></div>
             <p className="et-label">Injured Individuals</p>
           </div>
 
           <div className="et-vehicular">
-            <div className="et-image" onClick={() => navigate('/vehicular')}></div>
+            <div className="et-image" onClick={() => navigate('/user/vehicular')}></div>
             <p className="et-label">Vehicular Emergency</p>
           </div>
 
@@ -59,7 +44,7 @@ const UserIndex = () => {
           </div>
 
           <div className="et-others">
-            <div className="et-image" onClick={() => navigate('/others')}></div>
+            <div className="et-image" onClick={() => navigate('/user/others')}></div>
             <p className="et-label">Others</p>
           </div>
         </div>

@@ -5,6 +5,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
 import { isMobile } from 'react-device-detect';
+import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
   const webcamRef = useRef(null);
@@ -114,7 +115,7 @@ const UserIndex = () => {
 
     if (filePath) {
       window.alert(`Photo accepted! Location: ${placeName}`);
-      window.location.href = '/user-emergency-type';
+      navigate('/user/emergency-type', { state: { filePath, location, placeName } });
     }
   };
 
@@ -124,23 +125,7 @@ const UserIndex = () => {
 
   return (
     <div className="index-reporter-body">
-      <header className="index-reporter-header">
-        <div className="index-main-text">E-REPORT</div>
-      </header>
-      <header className="index-header-tab">
-        <button className="index-menu-btn">
-          <FontAwesomeIcon icon={faBars} />
-          <span className="index-menu-text">HELLO, REPORTER</span>
-        </button>
-        <div className="index-reporter-actions">
-          <button className="index-profile-btn">
-            <FontAwesomeIcon icon={faUser} />
-          </button>
-          <button className="index-logout-btn" onClick={() => navigate('/login')}>
-            <FontAwesomeIcon icon={faPowerOff} />
-          </button>
-        </div>
-      </header>
+      <UserLogout/>
 
       <div className="index-tabs-reporter">
         {!capturedImage ? (

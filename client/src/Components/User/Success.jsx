@@ -5,6 +5,7 @@ import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import moment from 'moment';
+import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
   const navigate = useNavigate();
@@ -167,23 +168,7 @@ const UserIndex = () => {
 
   return (
     <div className="index-responder-body" onClick={handleNotificationClose}>
-      <header className="index-responder-header">
-        <div className="index-main-text">E-REPORT</div>
-      </header>
-      <header className="index-header-tab">
-        <button className="index-menu-btn">
-          <FontAwesomeIcon icon={faBars} />
-          <span className="index-menu-text">HELLO, REPORTER</span>
-        </button>
-        <div className="index-responder-actions">
-          <button className="index-profile-btn">
-            <FontAwesomeIcon icon={faUser} />
-          </button>
-          <button className="index-logout-btn" onClick={() => navigate('/login')}>
-            <FontAwesomeIcon icon={faPowerOff} />
-          </button>
-        </div>
-      </header>
+      <UserLogout />
 
       <div className="index-tabs-responder">
         <p
@@ -217,7 +202,7 @@ const UserIndex = () => {
           )}
 
           {holdText === "RESPONDER IS ON YOUR LOCATION" && (
-            <button className="menu-btn" onClick={() => navigate('/user')}>
+            <button className="menu-btn" onClick={() => navigate('/user/index')}>
               RETURN TO MAIN MENU
             </button>
           )}

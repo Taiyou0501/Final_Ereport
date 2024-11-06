@@ -24,22 +24,22 @@ const Login = () => {
           login(); // Set the authentication state
           switch (res.data.table) {
             case 'admin_details':
-              navigate("/a-home");
+              navigate("/admin/home");
               break;
             case 'user_details':
-              navigate("/user");
+              navigate("/user/index");
               break;
             case 'police_details':
-              navigate("/police-home");
+              navigate("/police/home");
               break;
             case 'responder_details':
-              navigate("/responder-home");
+              navigate("/responder/home");
               break;
             case 'unit_details':
-              navigate("/u-home");
+              navigate("/unit/home");
               break;
             case 'barangay_details':
-              navigate("/barangay-home");
+              navigate("/barangay/home");
               break;
             default:
               alert("Unknown table");
