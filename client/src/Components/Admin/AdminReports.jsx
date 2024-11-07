@@ -38,6 +38,18 @@ const AdminReports = () => {
     setFilterDate(event.target.value);
   };
 
+  const handleStatusChange = async (reportId) => {
+    try {
+      await axios.put(`http://localhost:8081/api/reports/${reportId}/status`, { status: 'Responded' });
+      setReports(reports.map(report => report.id === reportId ? { ...report, status: 'Responded' } : report));
+      if (selectedReport && selectedReport.id === reportId) {
+        setSelectedReport({ ...selectedReport, status: 'Responded' });
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
   const filteredReports = reports.filter(report => {
     const matchesType = filterType ? report.type === filterType : true;
     const matchesDate = filterDate ? new Date(report.uploadedAt).toLocaleDateString() === new Date(filterDate).toLocaleDateString() : true;
@@ -67,13 +79,13 @@ const AdminReports = () => {
           <div className="menu">
             <ul className="menu-links">
               <li className="nav-link">
-              <a onClick={() => handleNavigation('/admin/home')}>
+                <a onClick={() => handleNavigation('/admin/home')}>
                   <FontAwesomeIcon icon={faHouse} className="icon" />
                   <span className="text nav-text">Home</span>
                 </a>
               </li>
               <li className="nav-link">
-              <a onClick={() => handleNavigation('/admin/reports')}>
+                <a onClick={() => handleNavigation('/admin/reports')}>
                   <FontAwesomeIcon icon={faFile} className="icon" />
                   <span className="text nav-text">Reports</span>
                 </a>
@@ -113,6 +125,10 @@ const AdminReports = () => {
                 <p><strong>Location:</strong> {selectedReport.location}</p>
                 <p><strong>Coordinates:</strong> Latitude: {selectedReport.latitude}, Longitude: {selectedReport.longitude}</p>
                 <p><strong>Date/Time:</strong> {new Date(selectedReport.uploadedAt).toLocaleString()}</p>
+                <p><strong>Status:</strong> {selectedReport.status}</p>
+                {selectedReport.status !== 'Responded' && (
+                  <button className="btn-responded" onClick={() => handleStatusChange(selectedReport.id)}>Mark as Responded</button>
+                )}
                 {selectedReport.imageUrl && (
                   <div>
                     <img src={`http://localhost:8081/${selectedReport.imageUrl}`} alt="Report" className="small-image" />
@@ -146,6 +162,7 @@ const AdminReports = () => {
                       <th>Type</th>
                       <th>Location</th>
                       <th>Date/Time</th>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody className="table-body">
@@ -156,6 +173,7 @@ const AdminReports = () => {
                         <td>{report.type}</td>
                         <td>{report.location}</td>
                         <td>{new Date(report.uploadedAt).toLocaleString()}</td>
+                        <td>{report.status}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -310,55 +310,87 @@ header .image-text .logo-title{
   transition: .5s ease, .5s ease;
 }
 //profile
-.home .tabs-profile{
+// Profile section
+.home .tabs-profile {
   position: relative;
   width: 1325px;
   height: 700px;
   border-radius: 50px;
-  box-shadow: 0 0 30px rgba(0,0,0,.5);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 50px;
 }
-.home .tabs-profile .new-wrapper{
+
+.home .tabs-profile .new-wrapper {
   position: relative;
   width: 500px;
-  height: 500px;
-  background: rgba(30, 7, 7, 0.1);
-  border: 2px solid rgba(255, 255, 255, .5);
+  height: auto;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   backdrop-filter: blur(50px);
-  box-shadow: 0 0 30px rgba(0,0,0,.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  transition: .5s ease, .5s ease;
-}
-.home .tabs-profile .new-wrapper .profile-info{
-  position: relative;
-  width: 100%;
-  height: 100%;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  overflow: hidden;
+  transition: 0.5s ease, 0.5s ease;
   padding: 20px;
 }
 
-.home .tabs-profile .new-wrapper .title{
+.home .tabs-profile .new-wrapper .profile-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.home .tabs-profile .new-wrapper .profile-info h1 {
   font-size: 30px;
   font-weight: 500;
   color: var(--text-color);
-  padding: 1px 10px;
+  margin-bottom: 20px;
 }
 
-.home .tabs-profile .new-wrapper .subtext{
-  font-size: 25px;
+.home .tabs-profile .new-wrapper .profile-info .two-forms {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.home .tabs-profile .new-wrapper .profile-info .title {
+  font-size: 20px;
   font-weight: 500;
   color: var(--text-color);
-  padding: 1px 10px;
+  margin-bottom: 5px;
+}
+
+.home .tabs-profile .new-wrapper .profile-info .subtext {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-color);
+  margin-bottom: 15px;
+}
+
+.home .tabs-profile .new-wrapper .profile-info .btn-register {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-family: 'Russo One', Helvetica, sans-serif;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  background-color: var(--button-background);
+  color: white;
+  align-self: center;
+}
+
+.home .tabs-profile .new-wrapper .profile-info .btn-register:hover {
+  background-color: var(--primary-color);
+  transform: scale(1.05);
 }
 
 .error-message{
@@ -504,4 +536,23 @@ header .image-text .logo-title{
 .btn-back:hover{
   background-color: #d32f2f; /* Darker red */
   transform: scale(1.1);
+}
+.btn-responded {
+  padding: 15px 30px; /* Adjust padding for a balanced look */
+  margin: 10px;
+  font-size: 16px; /* Adjust font size */
+  font-family: 'Russo One', Helvetica, sans-serif;
+  border: none;
+  border-radius: 25px; /* Increase border radius for a rounded look */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  background: linear-gradient(135deg, #ff0000, #d32f2f); /* Gradient background */
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add box shadow */
+}
+
+.btn-responded:hover {
+  background: linear-gradient(135deg, #d32f2f, #ff0000); /* Reverse gradient on hover */
+  transform: scale(1.05); /* Slightly scale up on hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Increase box shadow on hover */
 }

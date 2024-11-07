@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(session({
   secret: 'Te8LtamAsYFGxL6aS/VA2z1l/mQICv8rdX/YjX59C2o=',
   resave: false,
-  saveUnitialized: true,
+  saveUninitialized: true,
   cookie: { secure: false }
 }))
 
@@ -502,10 +502,69 @@ app.get('/api/accounts/:table/:id', (req, res) => {
 
 app.get('/checkSession', (req, res) => {
   if (req.session.user) {
-    res.send({ isAuthenticated: true, user: req.session.user });
+    const { username, table } = req.session.user;
+    const sql = `SELECT * FROM ${table} WHERE username = ?`;
+    
+    db.query(sql, [username], (err, results) => {
+      if (err) {
+        console.error('Error fetching user details:', err);
+        return res.status(500).json({ message: 'Error fetching user details' });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.send({ isAuthenticated: true, user: results[0] });
+    });
   } else {
     res.send({ isAuthenticated: false });
   }
+});
+
+app.put('/api/reports/:id/status', (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const sql = 'UPDATE full_report SET status = ? WHERE id = ?';
+
+  db.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error('Error updating report status:', err);
+      return res.status(500).json({ message: 'Error updating report status' });
+    }
+    res.status(200).json({ message: 'Report status updated successfully' });
+  });
+});
+
+app.get('/api/full_reports/locations', (req, res) => {
+  const sql = 'SELECT latitude, longitude, type, imageUrl FROM full_report WHERE status = "active"';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching locations:', err);
+      return res.status(500).json({ message: 'Error fetching locations' });
+    }
+    console.log('Active reports:', results); // Log the results
+    res.status(200).json(results);
+  });
+});
+
+app.put('/api/account/status', (req, res) => {
+  const { status, latitude, longitude } = req.body;
+  const { user } = req.session;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const table = user.table;
+  const username = user.username;
+  const sql = `UPDATE ${table} SET situation = ?, latitude = ?, longitude = ? WHERE username = ?`;
+
+  db.query(sql, [status, latitude, longitude, username], (err, result) => {
+    if (err) {
+      console.error('Error updating account situation:', err);
+      return res.status(500).json({ message: 'Error updating account situation' });
+    }
+    res.status(200).json({ message: 'Account situation updated successfully' });
+  });
 });
 
 app.listen(8081, () => {

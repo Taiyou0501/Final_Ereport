@@ -47,8 +47,11 @@ const UserIndex = () => {
 
   const handleSaveClick = async () => {
     try {
-      // Subtract 4 hours from the uploadedAt date before formatting it to an ISO string
-      const adjustedUploadedAt = moment(uploadedAt).subtract(4, 'hours').toISOString();
+      // Parse the original uploadedAt date string to a Moment.js object
+      const parsedDate = moment(uploadedAt, 'M/D/YYYY, h:mm:ss A');
+
+      // Subtract 4 hours from the parsed date
+      const adjustedUploadedAt = parsedDate.subtract(4, 'hours').toISOString();
 
       const fullReportData = {
         victim: 'N/A', // Replace with actual victim data if available
@@ -59,7 +62,8 @@ const UserIndex = () => {
         location, // Include the location in the data sent to the backend
         description: report ? report.description : '[Insert Description]',
         uploadedAt: adjustedUploadedAt,
-        imageUrl: filePath // Use the original filePath
+        imageUrl: filePath, // Use the original filePath
+        status: 'active' // Set the status to 'active'
       };
 
       await axios.post('http://localhost:8081/api/full_report', fullReportData);

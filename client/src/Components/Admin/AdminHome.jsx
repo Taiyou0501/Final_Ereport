@@ -22,18 +22,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-const getRandomLatLng = (bounds) => {
-  const latMin = bounds.getSouthWest().lat;
-  const latMax = bounds.getNorthEast().lat;
-  const lngMin = bounds.getSouthWest().lng;
-  const lngMax = bounds.getNorthEast().lng;
-
-  const lat = latMin + Math.random() * (latMax - latMin);
-  const lng = lngMin + Math.random() * (lngMax - lngMin);
-
-  return { lat, lng };
-};
-
 const markerTypes = [
   { type: 'Responder', label: 'Responder Location' },
   { type: 'Accident', label: 'Accident Location' },
@@ -46,18 +34,26 @@ const markerTypes = [
 
 const LocationMarker = () => {
   const [positions, setPositions] = useState([]);
+  const [reportLocations, setReportLocations] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8081/api/full_reports/locations')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Fetched report locations:', data); // Log the fetched data
+        setReportLocations(data);
+      })
+      .catch(error => console.error('Error fetching report locations:', error));
+  }, []);
 
   const map = useMapEvents({
     click() {
       map.locate();
     },
     locationfound(e) {
-      const bounds = map.getBounds();
-      const newPositions = markerTypes.map(marker => ({
-        ...marker,
-        position: getRandomLatLng(bounds)
-      }));
-      setPositions(newPositions);
+      setCurrentLocation(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
     },
   });
 
@@ -72,18 +68,42 @@ const LocationMarker = () => {
 
   return (
     <>
-      {positions.map((marker, index) => (
-        <Marker key={index} position={marker.position} icon={customIcons[marker.type]}>
-          <Popup>{marker.label}</Popup>
+      {reportLocations.map((location, index) => {
+        console.log('Rendering marker for location:', location); // Log each location being rendered
+        let icon;
+        if (location.type === 'Injured Individual') {
+          icon = customIcons.Injured;
+        } else if (location.type === 'Fire Emergency') {
+          icon = customIcons.Fire;
+        } else if (location.type === 'Vehicular Accident') {
+          icon = customIcons.Accident;
+        } else {
+          icon = customIcons[location.type];
+        }
+        const adjustedPosition = [location.latitude + 0.0003, location.longitude];
+        return (
+          <Marker key={index} position={adjustedPosition} icon={icon}>
+            <Popup>
+              <div>
+                <p>{location.type}</p>
+                {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '100px', height: '100px' }} />}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+      {currentLocation && (
+        <Marker position={currentLocation} icon={L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] })}>
+          <Popup>You are here</Popup>
         </Marker>
-      ))}
+      )}
     </>
   );
 };
 
 const legazpiBounds = [
-  [13.1000, 123.7000], // Southwest coordinates
-  [13.2000, 123.8000]  // Northeast coordinates
+  [12.9000, 123.5000], // Southwest coordinates
+  [13.4000, 124.0000]  // Northeast coordinates
 ];
 
 const center = [
