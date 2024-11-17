@@ -7,7 +7,6 @@ import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@forta
 import axios from 'axios';
 import Logout from "../../Logout";
 
-
 const AdminDashboard = () => {
   const [values, setValues] = useState({
     firstname: '',
@@ -15,8 +14,8 @@ const AdminDashboard = () => {
     barangay: '',
     email: '',
     username: '',
-    password: ''
-
+    password: '',
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -117,6 +116,9 @@ const AdminDashboard = () => {
                 </div>
                 <div className="inputbox">
                     <input type="email" placeholder="Email" name='email' onChange={handleChange} />
+                </div>
+                <div className="inputbox">
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                   {error && <p className="error">{error}</p>}

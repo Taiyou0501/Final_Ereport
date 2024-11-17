@@ -8,8 +8,8 @@ const Register = () => {
     lastname: '',
     username: '',
     email: '',
-    password: ''
-
+    password: '',
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -59,6 +59,9 @@ const Register = () => {
             </div>
             <div className="inputbox">
               <input type="password" placeholder="Password" name='password' onChange={handleChange} />
+            </div>
+            <div className="inputbox">
+              <input type="text" placeholder="CP Number" name='cpnumber' onChange={handleChange} /> {/* Add CP number input */}
             </div>
             <button className="btn-register" type="submit">
               Register

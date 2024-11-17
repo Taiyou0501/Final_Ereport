@@ -7,7 +7,6 @@ import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@forta
 import axios from 'axios';
 import Sidebar from "./Sidebar";
 
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [values, setValues] = useState({
@@ -17,7 +16,8 @@ const AdminDashboard = () => {
     rank: '',
     email: '',
     username: '',
-    password: ''
+    password: '',
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -43,6 +43,7 @@ const AdminDashboard = () => {
         }
       });
   };
+
   return (
     <div className="body">
       <Sidebar/>
@@ -70,6 +71,9 @@ const AdminDashboard = () => {
                 </div>
                 <div className="inputbox">
                     <input type="email" placeholder="Email" name='email' onChange={handleChange}/>
+                </div>
+                <div className="inputbox">
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                 {error && <p className="error-message">{error}</p>}

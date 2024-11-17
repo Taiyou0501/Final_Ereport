@@ -563,4 +563,60 @@ header .image-text .logo-title {
   background: linear-gradient(135deg, #d32f2f, #ff0000); /* Reverse gradient on hover */
   transform: scale(1.05); /* Slightly scale up on hover */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Increase box shadow on hover */
+}
+
+.tabs-profile.editing-mode .new-wrapper {
+  width: 550px;
+  height: 650px;
+  margin: 0 auto; /* Center the container */
+  padding: 20px; /* Add some padding */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a shadow for better visibility */
+  border-radius: 10px; /* Add rounded corners */
+  background-color: var(--background); /* Set a background color */
+  transition: all 0.3s ease; /* Smooth transition */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.tabs-profile.editing-mode .profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tabs-profile.editing-mode .form-group {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.tabs-profile.editing-mode .form-group .title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.tabs-profile.editing-mode .form-group .subtext {
+  width: 100%;
+}
+
+.tabs-profile.editing-mode input[type=text],
+.tabs-profile.editing-mode input[type=password] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.tabs-profile.editing-mode button {
+  padding: 10px 20px;
+  background-color: #000000;
+  color: var(--background);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tabs-profile.editing-mode button:hover {
+  background-color: #000000;
 }/*# sourceMappingURL=Dashboard.css.map */

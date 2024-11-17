@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Sidebar from "./Sidebar";
 
-
 const UnitDashboard = () => {
   const navigate = useNavigate();
   const [values, setValues] = useState({
@@ -14,7 +13,8 @@ const UnitDashboard = () => {
     email: '',
     password: '',
     vehicle: '',
-    respondertype: ''
+    respondertype: '',
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -30,7 +30,6 @@ const UnitDashboard = () => {
         console.log("Responder added successfully");
         alert("Responder added successfully");
         navigate("/unit/accounts");
-
       })
       .catch(err => {
         console.log(err);
@@ -69,6 +68,9 @@ const UnitDashboard = () => {
                 </div>
                 <div className="inputbox">
                     <input type="email" placeholder="Email" name='email' required onChange={handleChange}/>
+                </div>
+                <div className="inputbox">
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' required onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                 {error && <p className="error-message">{error}</p>}

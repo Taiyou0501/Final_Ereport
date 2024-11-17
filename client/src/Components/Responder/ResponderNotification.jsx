@@ -149,7 +149,7 @@ const Dashboard = () => {
                             );
                             setDistance(newDistance);
 
-                            if (newDistance <= 0.5) {
+                            if (newDistance <= 0.1) {
                                 clearInterval(intervalRef.current);
 
                                 try {

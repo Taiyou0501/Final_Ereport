@@ -41,7 +41,7 @@ const db = mysql.createConnection({
 })
 
 app.post('/register', (req, res) => {
-  const { firstname, lastname, username, email, password } = req.body;
+  const { firstname, lastname, username, email, password, cpnumber } = req.body; // Add cpnumber here
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
 
   let found = false;
@@ -64,8 +64,8 @@ app.post('/register', (req, res) => {
     if (index >= tables.length) {
       if (!found) {
         // Insert new user into the user_details table
-        const sql = "INSERT INTO user_details (`first_name`, `last_name`, `username`, `email`, `password`) VALUES (?)";
-        const values = [firstname, lastname, username, email, password];
+        const sql = "INSERT INTO user_details (`firstname`, `lastname`, `username`, `email`, `password`, `cpnumber`) VALUES (?)"; // Add cpnumber here
+        const values = [firstname, lastname, username, email, password, cpnumber]; // Add cpnumber here
         db.query(sql, [values], (err, data) => {
           if (err) return res.status(500).json(err);
           return res.json({ message: 'Registered Successfully' });
@@ -143,7 +143,7 @@ app.post('/logout', (req, res) => {
 
 
 app.post('/a-add-unit', (req, res) => {
-  const { firstname, lastname, unit, username, email, password } = req.body;
+  const { firstname, lastname, unit, username, email, password, cpnumber } = req.body; // Add cpnumber here
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
 
   let found = false;
@@ -166,8 +166,8 @@ app.post('/a-add-unit', (req, res) => {
     if (index >= tables.length) {
       if (!found) {
         // Insert new unit into the unit_details table
-        const sql = "INSERT INTO unit_details (`firstname`, `lastname`, `unit`, `username`, `email`, `password`) VALUES (?)";
-        const values = [firstname, lastname, unit, username, email, password];
+        const sql = "INSERT INTO unit_details (`firstname`, `lastname`, `unit`, `username`, `email`, `password`, `cpnumber`) VALUES (?)"; // Add cpnumber here
+        const values = [firstname, lastname, unit, username, email, password, cpnumber]; // Add cpnumber here
         db.query(sql, [values], (err, data) => {
           if (err) return res.status(500).json(err);
           return res.json({ message: 'Unit added successfully' });
@@ -191,7 +191,7 @@ app.post('/a-add-unit', (req, res) => {
 });
 
 app.post('/u-add-police', (req, res) => {
-  const { firstname, lastname, unit, rank, username, email, password } = req.body;
+  const { firstname, lastname, unit, rank, email, username, password, cpnumber } = req.body; // Add cpnumber here
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
 
   let found = false;
@@ -214,8 +214,8 @@ app.post('/u-add-police', (req, res) => {
     if (index >= tables.length) {
       if (!found) {
         // Insert new police officer into the police_details table
-        const sql = "INSERT INTO police_details (`firstname`, `lastname`, `unit`, `rank`, `username`, `email`, `password`) VALUES (?)";
-        const values = [firstname, lastname, unit, rank, username, email, password];
+        const sql = "INSERT INTO police_details (`firstname`, `lastname`, `unit`, `rank`, `email`, `username`, `password`, `cpnumber`) VALUES (?)"; // Add cpnumber here
+        const values = [firstname, lastname, unit, rank, email, username, password, cpnumber]; // Add cpnumber here
         db.query(sql, [values], (err, data) => {
           if (err) return res.status(500).json(err);
           return res.json({ message: 'Police officer added successfully' });
@@ -239,7 +239,7 @@ app.post('/u-add-police', (req, res) => {
 });
 
 app.post('/a-add-barangay', (req, res) => {
-  const { firstname, lastname, barangay, username, email, password } = req.body;
+  const { firstname, lastname, barangay, username, email, password, cpnumber } = req.body; // Add cpnumber here
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
 
   let found = false;
@@ -262,8 +262,8 @@ app.post('/a-add-barangay', (req, res) => {
     if (index >= tables.length) {
       if (!found) {
         // Insert new barangay into the barangay_details table
-        const sql = "INSERT INTO barangay_details (`firstname`, `lastname`, `barangay`, `username`, `email`, `password`) VALUES (?)";
-        const values = [firstname, lastname, barangay, username, email, password];
+        const sql = "INSERT INTO barangay_details (`firstname`, `lastname`, `barangay`, `username`, `email`, `password`, `cpnumber`) VALUES (?)"; // Add cpnumber here
+        const values = [firstname, lastname, barangay, username, email, password, cpnumber]; // Add cpnumber here
         db.query(sql, [values], (err, data) => {
           if (err) return res.status(500).json(err);
           return res.json({ message: 'Barangay added successfully' });
@@ -287,7 +287,7 @@ app.post('/a-add-barangay', (req, res) => {
 });
 
 app.post('/u-add-responder', (req, res) => {
-  const { firstname, lastname, respondertype, vehicle, email, username, password } = req.body;
+  const { firstname, lastname, respondertype, vehicle, email, username, password, cpnumber } = req.body; // Add cpnumber here
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
 
   let found = false;
@@ -310,8 +310,8 @@ app.post('/u-add-responder', (req, res) => {
     if (index >= tables.length) {
       if (!found) {
         // Insert new responder into the responder_details table
-        const sql = "INSERT INTO responder_details (`firstname`, `lastname`, `respondertype`, `vehicle`, `email`, `username`, `password`) VALUES (?)";
-        const values = [firstname, lastname, respondertype, vehicle, email, username, password];
+        const sql = "INSERT INTO responder_details (`firstname`, `lastname`, `respondertype`, `vehicle`, `email`, `username`, `password`, `cpnumber`) VALUES (?)"; // Add cpnumber here
+        const values = [firstname, lastname, respondertype, vehicle, email, username, password, cpnumber]; // Add cpnumber here
         db.query(sql, [values], (err, data) => {
           if (err) return res.status(500).json(err);
           return res.json({ message: 'Responder added successfully' });
@@ -830,6 +830,57 @@ app.put('/api/full_report/:id/status', (req, res) => {
     res.status(200).json({ message: 'Report status and ETA updated successfully' });
   });
 });
+
+app.put('/updateAccount', (req, res) => {
+  const { user } = req.session;
+  const { firstname, lastname, username, email, password, cpnumber, respondertype, vehicle, unit, rank, barangay } = req.body;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const table = user.table;
+  const currentUsername = user.username;
+
+  let sql = `UPDATE ${table} SET firstname = ?, lastname = ?, username = ?, email = ?, password = ?, cpnumber = ?`;
+  const values = [firstname, lastname, username, email, password, cpnumber];
+
+  if (table === 'responder_details') {
+    sql += `, respondertype = ?, vehicle = ?`;
+    values.push(respondertype, vehicle);
+  } else if (table === 'police_details') {
+    sql += `, unit = ?, rank = ?`;
+    values.push(unit, rank);
+  } else if (table === 'barangay_details') {
+    sql += `, barangay = ?`;
+    values.push(barangay);
+  } else if (table === 'unit_details') {
+    sql += `, unit = ?`;
+    values.push(unit);
+  }
+
+  sql += ` WHERE username = ?`;
+  values.push(currentUsername);
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Error updating account details:', err);
+      return res.status(500).json({ message: 'Error updating account details' });
+    }
+
+    // Update session user data
+    req.session.user.username = username;
+    req.session.save(err => {
+      if (err) {
+        console.error('Error saving session:', err);
+        return res.status(500).json({ message: 'Error saving session' });
+      }
+      res.status(200).json({ message: 'Account updated successfully' });
+    });
+  });
+});
+
+
 
 app.listen(8081, () => {
     console.log("Listening...")

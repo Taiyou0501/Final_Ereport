@@ -14,8 +14,8 @@ const AddUnit = () => {
     unit: '',
     email: '',
     username: '',
-    password: ''
-
+    password: '',
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -116,6 +116,9 @@ const AddUnit = () => {
                 </div>
                 <div className="inputbox">
                     <input type="email" placeholder="Email" name='email' onChange={handleChange}/>
+                </div>
+                <div className="inputbox">
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                 {error && <p className="error-message">{error}</p>}

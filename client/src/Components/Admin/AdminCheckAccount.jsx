@@ -225,7 +225,6 @@ const AdminCheckAccount = () => {
           </div>
         </div>
       )}
-
       {selectedAccount && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-popup" onClick={(e) => e.stopPropagation()}>
