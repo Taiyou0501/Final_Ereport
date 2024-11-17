@@ -1,9 +1,8 @@
 import '../CSS/user.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserLogout from '../../UserLogout';
+import axios from 'axios';
 
 const VictimName = () => {
     const navigate = useNavigate();
@@ -12,14 +11,20 @@ const VictimName = () => {
     const [inputValue, setInputValue] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
-    const handleSpecifyClick = () => {
+    const handleSpecifyClick = async () => {
         if (showInput) {
-            // Handle submit logic here if inputValue is not empty
             if (inputValue) {
-                console.log('Submitted:', inputValue);
-                setSubmitted(true); // Set the submitted state to true
-                setShowInput(false); // Hide the input field
-                navigate('/user/submission-success');
+                try {
+                    const response = await axios.post('http://localhost:8081/api/update-victim-name', { victim_name: inputValue }, { withCredentials: true });
+                    if (response.status === 200) {
+                        console.log('Submitted:', inputValue);
+                        setSubmitted(true);
+                        setShowInput(false);
+                        navigate('/user/submission-success');
+                    }
+                } catch (error) {
+                    console.error('Error updating victim name:', error);
+                }
             }
         } else {
             setShowInput(true);

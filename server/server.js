@@ -338,14 +338,17 @@ app.post('/login', (req, res) => {
   const sql = "SELECT * FROM user_details WHERE username = ? AND password = ?";
   
   db.query(sql, [req.body.username, req.body.password], (err, data) => {
-    if(err) return res.json("Error");
-    if(data.length > 0) {
-      return res.json("Login Successful");
-      } else {
-        return res.json("Invalid Credentials");
-      }
-    })
-})
+    if (err) {
+      return res.status(500).json({ message: 'Error logging in' });
+    }
+    if (data.length > 0) {
+      req.session.user = data[0];
+      return res.status(200).json({ message: 'Login successful' });
+    } else {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+  });
+});
 
 //handle image upload
 app.post('/upload', upload.single('image'), (req, res) => {
@@ -362,7 +365,24 @@ app.post('/upload', upload.single('image'), (req, res) => {
       console.error('Error inserting into MySQL:', err);
       return res.status(500).send('Error saving to database.');
     }
-    res.status(200).send({ filePath });
+
+    const uploadId = result.insertId; // Get the ID of the inserted upload
+
+    // Retrieve the authenticated user's information from the session
+    const { user } = req.session;
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const updateQuery = 'UPDATE user_details SET uploadId = ? WHERE username = ?';
+    db.query(updateQuery, [uploadId, user.username], (updateErr) => {
+      if (updateErr) {
+        console.error('Error updating user uploadId:', updateErr);
+        return res.status(500).send('Error updating user uploadId.');
+      }
+
+      res.status(200).send({ filePath, uploadId });
+    });
   });
 });
 
@@ -409,14 +429,35 @@ app.get('/latest-image-id', (req, res) => {
 });
 
 app.post('/api/reports', (req, res) => {
-  const { description, type } = req.body;
-  const sql = 'INSERT INTO reports (description, type) VALUES (?, ?)';
-  db.query(sql, [description, type], (err, result) => {
+  const { description, type, victim_name } = req.body;
+  const sql = victim_name
+    ? 'INSERT INTO reports (description, type, victim_name) VALUES (?, ?, ?)'
+    : 'INSERT INTO reports (description, type) VALUES (?, ?)';
+  const params = victim_name ? [description, type, victim_name] : [description, type];
+  
+  db.query(sql, params, (err, result) => {
     if (err) {
       console.error('Error inserting report:', err);
       return res.status(500).json({ message: 'Error inserting report' });
     }
-    res.status(200).json({ message: 'Report added successfully' });
+
+    const reportId = result.insertId; // Get the ID of the inserted report
+
+    // Retrieve the authenticated user's information from the session
+    const { user } = req.session;
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const updateQuery = 'UPDATE user_details SET reportId = ? WHERE username = ?';
+    db.query(updateQuery, [reportId, user.username], (updateErr) => {
+      if (updateErr) {
+        console.error('Error updating user reportId:', updateErr);
+        return res.status(500).json({ message: 'Error updating user reportId' });
+      }
+
+      res.status(200).json({ message: 'Report added successfully', reportId });
+    });
   });
 });
 
@@ -431,19 +472,91 @@ app.get('/api/reports/latest', (req, res) => {
   });
 });
 
-app.post('/api/full_report', (req, res) => {
-  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl } = req.body;
-  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?)';
-  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl], (err, result) => {
+app.get('/api/user_details', (req, res) => {
+  const { user } = req.session;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const sql = 'SELECT reportId FROM user_details WHERE username = ?';
+  db.query(sql, [user.username], (err, results) => {
     if (err) {
-      console.error('Error inserting full report:', err);
+      console.error('Error fetching user details:', err);
+      return res.status(500).json({ message: 'Error fetching user details' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+app.get('/api/reports/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'SELECT * FROM reports WHERE id = ?';
+  db.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching report:', err);
+      return res.status(500).json({ message: 'Error fetching report' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
+app.get('/api/user-upload-id', (req, res) => {
+  const { user } = req.session;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const query = 'SELECT uploadId FROM user_details WHERE username = ?';
+  db.query(query, [user.username], (err, results) => {
+    if (err) {
+      console.error('Error fetching upload ID:', err);
+      return res.status(500).send('Error fetching upload ID');
+    }
+    if (results.length === 0) {
+      return res.status(404).send('User not found.');
+    }
+    res.status(200).json(results[0]);
+  });
+});
+
+app.post('/api/full_report', (req, res) => {
+  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId } = req.body;
+  
+  console.log('Received full report data:', req.body); // Log the received data
+
+  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId], (err, result) => {
+    if (err) {
+      console.error('Error inserting full report:', err); // Log the error
       return res.status(500).json({ message: 'Error inserting full report' });
     }
     res.status(200).json({ message: 'Full report added successfully' });
   });
 });
 
-app.get('/api/full_reports', (req, res) => {
+app.post('/api/full_report', (req, res) => {
+  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId } = req.body;
+  
+  console.log('Received full report data:', req.body); // Log the received data
+
+  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId], (err, result) => {
+    if (err) {
+      console.error('Error inserting full report:', err); // Log the error
+      return res.status(500).json({ message: 'Error inserting full report' });
+    }
+    res.status(200).json({ message: 'Full report added successfully' });
+  });
+});
+
+app.get('/api/full_reports/all', (req, res) => {
   const sql = 'SELECT * FROM full_report';
   db.query(sql, (err, results) => {
     if (err) {
@@ -453,6 +566,8 @@ app.get('/api/full_reports', (req, res) => {
     res.status(200).json(results);
   });
 });
+
+
 
 app.get('/api/accounts', (req, res) => {
   const tables = ['user_details', 'responder_details', 'unit_details', 'police_details', 'barangay_details'];
@@ -520,6 +635,8 @@ app.get('/checkSession', (req, res) => {
   }
 });
 
+
+
 app.put('/api/reports/:id/status', (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -531,6 +648,24 @@ app.put('/api/reports/:id/status', (req, res) => {
       return res.status(500).json({ message: 'Error updating report status' });
     }
     res.status(200).json({ message: 'Report status updated successfully' });
+  });
+});
+
+app.post('/api/update-victim-name', (req, res) => {
+  const { victim_name } = req.body;
+  const { user } = req.session;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const sql = 'UPDATE reports SET victim_name = ? WHERE id = (SELECT reportId FROM user_details WHERE username = ?)';
+  db.query(sql, [victim_name, user.username], (err, result) => {
+    if (err) {
+      console.error('Error updating victim name:', err);
+      return res.status(500).json({ message: 'Error updating victim name' });
+    }
+    res.status(200).json({ message: 'Victim name updated successfully' });
   });
 });
 
@@ -564,6 +699,135 @@ app.put('/api/account/status', (req, res) => {
       return res.status(500).json({ message: 'Error updating account situation' });
     }
     res.status(200).json({ message: 'Account situation updated successfully' });
+  });
+});
+
+app.get('/api/responders/active', (req, res) => {
+  const { respondertype } = req.query;
+  let sql = 'SELECT id, latitude, longitude FROM responder_details WHERE situation = "active"';
+
+  if (respondertype) {
+    sql += ' AND respondertype = ?';
+  }
+
+  db.query(sql, [respondertype], (err, results) => {
+    if (err) {
+      console.error('Error fetching active responders:', err);
+      return res.status(500).json({ message: 'Error fetching active responders' });
+    }
+    res.status(200).json(results);
+  });
+});
+
+app.post('/api/full_reports/closestResponder', (req, res) => {
+  const { responderId } = req.body;
+  const closestResponderId = `responder_${responderId}`;
+  const sql = 'SELECT id FROM full_report WHERE closestResponderId = ? AND status = "active"';
+
+  db.query(sql, [closestResponderId], (err, results) => {
+    if (err) {
+      console.error('Error fetching reports:', err);
+      return res.status(500).json({ message: 'Error fetching reports' });
+    }
+    if (results.length > 0) {
+      return res.status(200).json({ match: true, reportId: results[0].id });
+    }
+    res.status(200).json({ match: false });
+  });
+});
+
+app.put('/api/responders/:id/report', (req, res) => {
+  const { id } = req.params;
+  const { reportId } = req.body;
+  const sql = 'UPDATE responder_details SET reportId = ? WHERE id = ?';
+
+  db.query(sql, [reportId, id], (err, result) => {
+    if (err) {
+      console.error('Error updating responder reportId:', err);
+      return res.status(500).json({ message: 'Error updating responder reportId' });
+    }
+    res.status(200).json({ message: 'Responder reportId updated' });
+  });
+});
+
+app.put('/api/responders/:id/situation', (req, res) => {
+  const { id } = req.params;
+  const { situation } = req.body;
+  const sql = 'UPDATE responder_details SET situation = ? WHERE id = ?';
+
+  db.query(sql, [situation, id], (err, result) => {
+    if (err) {
+      console.error('Error updating responder situation:', err);
+      return res.status(500).json({ message: 'Error updating responder situation' });
+    }
+    res.status(200).json({ message: 'Responder situation updated' });
+  });
+});
+app.get('/api/responder/report', (req, res) => {
+  const { user } = req.session;
+
+  if (!user || user.table !== 'responder_details') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const sql = `SELECT reportId FROM responder_details WHERE username = ?`;
+  db.query(sql, [user.username], (err, results) => {
+    if (err) {
+      console.error('Error fetching responder reportId:', err);
+      return res.status(500).json({ message: 'Error fetching responder reportId' });
+    }
+    if (results.length === 0 || !results[0].reportId) {
+      return res.status(404).json({ message: 'No report found for this responder' });
+    }
+
+    const reportId = results[0].reportId;
+    const reportSql = `SELECT id, type, latitude, longitude, victim, reporterId, location, description, uploadedAt, imageUrl FROM full_report WHERE id = ?`;
+    db.query(reportSql, [reportId], (err, reportResults) => {
+      if (err) {
+        console.error('Error fetching report details:', err);
+        return res.status(500).json({ message: 'Error fetching report details' });
+      }
+      if (reportResults.length === 0) {
+        return res.status(404).json({ message: 'Report not found' });
+      }
+      res.status(200).json(reportResults[0]);
+    });
+  });
+});
+
+app.put('/api/responder/resetReport', (req, res) => {
+  const { user } = req.session;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const table = user.table;
+  const username = user.username;
+  const sql = `UPDATE ${table} SET reportId = 0 WHERE username = ?`;
+
+  db.query(sql, [username], (err, result) => {
+    if (err) {
+      console.error('Error updating reportId:', err);
+      return res.status(500).json({ message: 'Error updating reportId' });
+    }
+    res.status(200).json({ message: 'ReportId reset successfully' });
+  });
+});
+
+
+
+app.put('/api/full_report/:id/status', (req, res) => {
+  const { id } = req.params;
+  const { status, eta } = req.body;
+
+  const sql = 'UPDATE full_report SET status = ?, eta = ? WHERE id = ?';
+  db.query(sql, [status, eta, id], (err, result) => {
+    if (err) {
+      console.error('Error updating report status:', err);
+      return res.status(500).json({ message: 'Error updating report status' });
+    }
+    res.status(200).json({ message: 'Report status and ETA updated successfully' });
   });
 });
 

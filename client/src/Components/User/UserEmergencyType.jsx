@@ -1,7 +1,5 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import UserLogout from '../../UserLogout';
 
@@ -10,11 +8,13 @@ const UserIndex = () => {
 
   const handleFireEmergencyClick = async () => {
     try {
-      await axios.post('http://localhost:8081/api/reports', {
+      const response = await axios.post('http://localhost:8081/api/reports', {
         description: 'FIRE',
         type: 'Fire Emergency'
+      }, {
+        withCredentials: true // Include credentials in the request
       });
-      console.log('Fire emergency report submitted');
+      console.log('Fire emergency report submitted:', response.data);
       navigate('/user/submission-success');
     } catch (error) {
       console.error('Error submitting fire emergency report:', error);

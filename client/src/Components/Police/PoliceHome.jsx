@@ -6,6 +6,7 @@ import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
 import policeIcon from '../Assets/police1.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
+import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -51,6 +52,7 @@ const LocationMarker = ({ setCurrentLocation }) => {
         Police: L.icon({  iconUrl: policeIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
         Barangay: L.icon({  iconUrl: barangayIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
         Injured: L.icon({  iconUrl: injuredIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
+        Others: L.icon({  iconUrl: othersIcon, iconSize: [80, 80], iconAnchor: [20, 40] }) // Add the custom icon for Others
     };
 
     return (
@@ -64,6 +66,8 @@ const LocationMarker = ({ setCurrentLocation }) => {
                     icon = customIcons.Fire;
                 } else if (location.type === 'Vehicular Accident') {
                     icon = customIcons.Accident;
+                } else if (location.type === 'Others') {
+                    icon = customIcons.Others;
                 } else {
                     icon = customIcons[location.type];
                 }
@@ -187,7 +191,7 @@ const Dashboard = () => {
                     <div id="map" className="map-container">
                         <MapContainer 
                             bounds={legazpiBounds}
-                            style={{ height: '100vh', width: '100vh' }}
+                            style={{ height: '100%', width: '100%' }}
                             scrollWheelZoom={true}>
                             <TileLayer
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

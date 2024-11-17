@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import '../CSS/Dashboard.css';
 import logo from '../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faFile, faUsers, faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Logout from '../../Logout';
 
@@ -16,7 +16,7 @@ const AdminReports = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/api/full_reports');
+        const response = await axios.get('http://localhost:8081/api/full_reports/all');
         setReports(response.data);
       } catch (error) {
         console.error('Error fetching reports:', error);

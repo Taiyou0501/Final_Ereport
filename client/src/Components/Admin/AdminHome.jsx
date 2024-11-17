@@ -8,6 +8,7 @@ import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
 import policeIcon from '../Assets/police1.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
+import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faFile, faUsers, faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
@@ -25,11 +26,11 @@ L.Icon.Default.mergeOptions({
 const markerTypes = [
   { type: 'Responder', label: 'Responder Location' },
   { type: 'Accident', label: 'Accident Location' },
-  { type: 'Accident', label: 'Accident Location' },
   { type: 'Fire', label: 'Fire Location' },
   { type: 'Police', label: 'Police Location' },
   { type: 'Barangay', label: 'Barangay Location' },
-  { type: 'Injured', label: 'Injured Individual Location' }
+  { type: 'Injured', label: 'Injured Individual Location' },
+  { type: 'Others', label: 'Other Location' } // Add the new marker type
 ];
 
 const LocationMarker = () => {
@@ -64,6 +65,7 @@ const LocationMarker = () => {
     Police: L.icon({  iconUrl: policeIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
     Barangay: L.icon({  iconUrl: barangayIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
     Injured: L.icon({  iconUrl: injuredIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
+    Others: L.icon({  iconUrl: othersIcon, iconSize: [80, 80], iconAnchor: [20, 40] }) // Add the custom icon for Others
   };
 
   return (
@@ -77,6 +79,8 @@ const LocationMarker = () => {
           icon = customIcons.Fire;
         } else if (location.type === 'Vehicular Accident') {
           icon = customIcons.Accident;
+        } else if (location.type === 'Others') {
+          icon = customIcons.Others;
         } else {
           icon = customIcons[location.type];
         }

@@ -11,6 +11,7 @@ import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
 import policeIcon from '../Assets/police1.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
+import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -51,6 +52,7 @@ const LocationMarker = () => {
     Police: L.icon({  iconUrl: policeIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
     Barangay: L.icon({  iconUrl: barangayIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
     Injured: L.icon({  iconUrl: injuredIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
+    Others: L.icon({  iconUrl: othersIcon, iconSize: [80, 80], iconAnchor: [20, 40] }) // Add the custom icon for Others
   };
 
   return (
@@ -64,6 +66,8 @@ const LocationMarker = () => {
           icon = customIcons.Fire;
         } else if (location.type === 'Vehicular Accident') {
           icon = customIcons.Accident;
+        } else if (location.type === 'Others') {
+          icon = customIcons.Others;
         } else {
           icon = customIcons[location.type];
         }
@@ -129,7 +133,8 @@ const UnitDashboard = () => {
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         />
                         <LocationMarker />
-            </MapContainer>      </div>
+            </MapContainer>      
+          </div>
         </div>
       </section>
     </div>

@@ -1,7 +1,5 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import moment from 'moment';
@@ -24,7 +22,10 @@ const UserIndex = () => {
   const [notification, setNotification] = useState(''); // State for notification message
   const [location, setLocation] = useState(''); // State to store the place name
   const [loading, setLoading] = useState(true); // State to manage loading
-
+  const [closestResponderId, setClosestResponderId] = useState(''); // State for closest responder ID, default to empty string
+  const [victimName, setVictimName] = useState(''); // State for victim name
+  const [reporterId, setReporterId] = useState(''); // State for reporter ID
+  
   const handleNextClick = () => {
     setFadeClass('fade-out');
 
@@ -33,7 +34,7 @@ const UserIndex = () => {
         const newCount = prevCount + 1;
 
         if (newCount === 1) {
-          setHoldText("RESPONDER IS ON THE WAY. ETA: 5 MINUTES");
+          setHoldText("RESPONDER IS ON THE WAY. ETA: ");
         } else if (newCount === 2) {
           setHoldText("RESPONDER IS ON YOUR LOCATION");
         }
@@ -45,33 +46,152 @@ const UserIndex = () => {
     }, 150);
   };
 
+  // Function to calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (loc1, loc2) => {
+    const toRad = (value) => (value * Math.PI) / 180;
+    const R = 6371; // Radius of the Earth in km
+    const dLat = toRad(loc2.latitude - loc1.latitude);
+    const dLon = toRad(loc2.longitude - loc1.longitude);
+    const lat1 = toRad(loc1.latitude);
+    const lat2 = toRad(loc2.latitude);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in km
+    return distance;
+  };
+
+  // Dijkstra's algorithm implementation
+  const dijkstra = (graph, startNode) => {
+    const distances = {};
+    const visited = {};
+    const unvisited = new Set(Object.keys(graph));
+
+    // Initialize distances
+    for (const node of unvisited) {
+      distances[node] = Infinity;
+    }
+    distances[startNode] = 0;
+
+    while (unvisited.size > 0) {
+      // Find the unvisited node with the smallest distance
+      let currentNode = null;
+      for (const node of unvisited) {
+        if (currentNode === null || distances[node] < distances[currentNode]) {
+          currentNode = node;
+        }
+      }
+
+      // Mark the current node as visited
+      unvisited.delete(currentNode);
+      visited[currentNode] = true;
+
+      // Update distances to neighboring nodes
+      for (const neighbor in graph[currentNode]) {
+        if (!visited[neighbor]) {
+          const newDistance = distances[currentNode] + graph[currentNode][neighbor];
+          if (newDistance < distances[neighbor]) {
+            distances[neighbor] = newDistance;
+          }
+        }
+      }
+    }
+
+    return distances;
+  };
+
   const handleSaveClick = async () => {
     try {
+      // Determine the responder type based on the report type
+      let responderType = '';
+      if (report.type === 'Fire Emergency') {
+        responderType = 'Firefighter';
+      } else {
+        responderType = 'Medical Professional';
+      }
+  
+      // Fetch active responders with the specified responder type
+      const respondersResponse = await axios.get('http://localhost:8081/api/responders/active', {
+        params: { respondertype: responderType }
+      });
+      const responders = respondersResponse.data;
+  
+      console.log('Active responders:', responders); // Log active responders
+  
+      let closestResponder = 'No responder available';
+  
+      if (responders.length > 0) {
+        // Create a graph with the incident location and responders
+        const graph = {};
+        const incidentNode = 'incident';
+        graph[incidentNode] = {};
+  
+        responders.forEach(responder => {
+          const responderNode = `responder_${responder.id}`;
+          graph[responderNode] = {};
+          const distance = calculateDistance(
+            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+            { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
+          );
+          graph[incidentNode][responderNode] = distance;
+          graph[responderNode][incidentNode] = distance;
+        });
+  
+        // Run Dijkstra's algorithm
+        const distances = dijkstra(graph, incidentNode);
+        console.log('Distances:', distances); // Log distances
+  
+        // Find the closest responder
+        let minDistance = Infinity;
+        for (const responderNode in distances) {
+          if (responderNode !== incidentNode && distances[responderNode] < minDistance) {
+            minDistance = distances[responderNode];
+            closestResponder = responderNode;
+          }
+        }
+  
+        console.log('Closest responder:', closestResponder); // Log closest responder
+      } else if (report.type === 'Fire Emergency') {
+        closestResponder = 'No available Firefighter';
+      }
+  
+      // Set the closest responder ID state
+      setClosestResponderId(closestResponder);
+      console.log('Closest Responder ID:', closestResponder); // Log closest responder ID
+  
       // Parse the original uploadedAt date string to a Moment.js object
       const parsedDate = moment(uploadedAt, 'M/D/YYYY, h:mm:ss A');
-
+  
       // Subtract 4 hours from the parsed date
       const adjustedUploadedAt = parsedDate.subtract(4, 'hours').toISOString();
-
+  
+      // Ensure closestResponderId is correctly set
+      console.log('closestResponderId before setting fullReportData:', closestResponder);
+  
       const fullReportData = {
-        victim: 'N/A', // Replace with actual victim data if available
-        reporterId: '[Insert Reporter ID]', // Replace with actual reporter ID if available
+        victim: victimName, // Use the victim name from state
+        reporterId: reporterId, // Use the reporter ID from state
         type: report ? report.type : '[Accident Type]',
         latitude,
         longitude,
         location, // Include the location in the data sent to the backend
-        description: report ? report.description : '[Insert Description]',
+        description: report ? report.description : '[Insert Description]' + (closestResponder !== 'No responder available' ? '' : ' No responder available.'),
         uploadedAt: adjustedUploadedAt,
         imageUrl: filePath, // Use the original filePath
-        status: 'active' // Set the status to 'active'
+        status: 'active', // Set the status to 'active'
+        closestResponderId: closestResponder // Use the formatted closest responder ID
       };
-
+  
+      console.log('Full report data before sending:', fullReportData); // Log full report data
+  
       await axios.post('http://localhost:8081/api/full_report', fullReportData);
       console.log('Full report saved successfully');
-
+  
       // Set notification message
       setNotification('Data saved successfully!');
-
+  
       // Reformat the date back to its original format
       setUploadedAt(originalUploadedAt);
     } catch (error) {
@@ -109,22 +229,22 @@ const UserIndex = () => {
   };
 
   useEffect(() => {
-    const fetchLatestImageId = async () => {
+    const fetchUploadId = async () => {
       try {
-        const response = await fetch('http://localhost:8081/latest-image-id');
+        const response = await fetch('http://localhost:8081/api/user-upload-id', { credentials: 'include' });
         if (!response.ok) {
-          throw new Error('Failed to fetch latest image ID');
+          throw new Error('Failed to fetch upload ID');
         }
         const data = await response.json();
-        setImageId(data.id);
+        setImageId(data.uploadId);
       } catch (error) {
-        console.error('Error fetching latest image ID:', error);
+        console.error('Error fetching upload ID:', error);
       }
     };
-
-    fetchLatestImageId();
+  
+    fetchUploadId();
   }, []);
-
+  
   useEffect(() => {
     const fetchImageDetails = async () => {
       if (imageId) {
@@ -149,21 +269,41 @@ const UserIndex = () => {
         }
       }
     };
-
+  
     fetchImageDetails();
   }, [imageId]);
 
   useEffect(() => {
-    const fetchLatestReport = async () => {
+    const fetchReportIdFromUserDetails = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/api/reports/latest');
-        setReport(response.data);
+        const userDetailsResponse = await axios.get('http://localhost:8081/api/user_details', { withCredentials: true });
+        const reportId = userDetailsResponse.data.reportId;
+  
+        if (reportId) {
+          const reportResponse = await axios.get(`http://localhost:8081/api/reports/${reportId}`);
+          setReport(reportResponse.data);
+          setVictimName(reportResponse.data.victim_name); // Set the victim name from the report
+        }
       } catch (error) {
-        console.error('Error fetching latest report:', error);
+        console.error('Error fetching report ID from user details:', error);
       }
     };
+  
+    fetchReportIdFromUserDetails();
+  }, []);
 
-    fetchLatestReport();
+  useEffect(() => {
+    const fetchSessionData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8081/checkSession', { withCredentials: true });
+        console.log('Session data:', response.data); // Log the session data
+        setReporterId(`user_${response.data.user.id}`);
+      } catch (error) {
+        console.error('Error fetching session data:', error);
+      }
+    };
+  
+    fetchSessionData();
   }, []);
 
   const handleNotificationClose = () => {
@@ -185,13 +325,16 @@ const UserIndex = () => {
         <div className="report-container">
           <div className='report-parent-container'>
             <div className="report-details-container">
-              <p className="d1">Victim: N/A</p>
-              <p className="d2">Reporter ID: [Insert Reporter ID]</p>
+              <p className="d1">Victim: {victimName}</p>
+              <p className="d2">Reporter ID: {reporterId || 'Loading...'}</p>
               <p className="d3">Type: {report ? report.type : '[Accident Type]'}</p>
               <p className="d4">Location: {location}</p>
               <p className="d4">Latitude: {latitude}, Longitude: {longitude}</p>
               <p className="d5">Description: {report ? report.description : '[Insert Description]'}</p>
               <p className="d6">Date/Time: {uploadedAt}</p>
+              {hasSaved && (
+                <p className="d6">Closest Responder ID: {closestResponderId}</p>
+              )}
             </div>
             <div className="notif-picture-container">
               {imageUrl ? (

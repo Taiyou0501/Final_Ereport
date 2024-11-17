@@ -76,17 +76,19 @@ const UserIndex = () => {
     formData.append('image', image);
     formData.append('latitude', location.latitude);
     formData.append('longitude', location.longitude);
-
+  
     try {
       const response = await fetch('http://localhost:8081/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        const errorText = await response.text();
+        throw new Error(`Failed to upload image: ${errorText}`);
       }
-
+  
       const data = await response.json();
       console.log('Image uploaded successfully:', data);
       return data.filePath;

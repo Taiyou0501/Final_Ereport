@@ -15,9 +15,11 @@ const UserIndex = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          await axios.post('http://localhost:8081/api/reports', {
+          const response = await axios.post('http://localhost:8081/api/reports', {
             description: inputValue,
             type: 'Others'
+          }, {
+            withCredentials: true // Include credentials in the request
           });
           console.log('Submitted:', inputValue);
           setSubmitted(true);

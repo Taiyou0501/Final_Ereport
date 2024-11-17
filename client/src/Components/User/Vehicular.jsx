@@ -17,9 +17,11 @@ const UserIndex = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          await axios.post('http://localhost:8081/api/reports', {
+          const response = await axios.post('http://localhost:8081/api/reports', {
             description: inputValue + ' vehicles involved',
             type: 'Vehicular Accident'
+          }, {
+            withCredentials: true // Include credentials in the request
           });
           console.log('Submitted:', inputValue);
           setSubmitted(true);
@@ -45,9 +47,11 @@ const UserIndex = () => {
 
   const handleSkipClick = async () => {
     try {
-      await axios.post('http://localhost:8081/api/reports', {
+      const response = await axios.post('http://localhost:8081/api/reports', {
         description: 'Did not specify',
         type: 'Vehicular Accident'
+      }, {
+        withCredentials: true // Include credentials in the request
       });
       console.log('Submitted: Did not specify');
       setSubmitted(true);

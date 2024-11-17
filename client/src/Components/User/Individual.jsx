@@ -14,9 +14,11 @@ const Individual = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          await axios.post('http://localhost:8081/api/reports', {
+          const response = await axios.post('http://localhost:8081/api/reports', {
             description: inputValue,
             type: 'Injured Individual'
+          }, {
+            withCredentials: true // Include credentials in the request
           });
           console.log('Submitted:', inputValue);
           setSubmitted(true);
@@ -30,12 +32,14 @@ const Individual = () => {
       setShowInput(true);
     }
   };
-
+  
   const handleSkipClick = async () => {
     try {
-      await axios.post('http://localhost:8081/api/reports', {
+      const response = await axios.post('http://localhost:8081/api/reports', {
         description: 'Did not specify',
         type: 'Injured Individual'
+      }, {
+        withCredentials: true // Include credentials in the request
       });
       console.log('Submitted: Did not specify');
       setSubmitted(true);

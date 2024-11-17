@@ -1,16 +1,16 @@
-import '../CSS/responder.css';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import UserLogout from '../../UserLogout';
 import ambulanceIcon from '../Assets/responder.png';
 import fireIcon from '../Assets/fire1.png';
 import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
 import policeIcon from '../Assets/police1.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import UserLogout from '../../UserLogout';
+import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -51,6 +51,7 @@ const LocationMarker = ({ setCurrentLocation }) => {
         Police: L.icon({  iconUrl: policeIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
         Barangay: L.icon({  iconUrl: barangayIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
         Injured: L.icon({  iconUrl: injuredIcon, iconSize: [80, 80], iconAnchor: [20, 40] }),
+        Others: L.icon({  iconUrl: othersIcon, iconSize: [80, 80], iconAnchor: [20, 40] }) // Add the custom icon for Others
     };
 
     return (
@@ -64,6 +65,8 @@ const LocationMarker = ({ setCurrentLocation }) => {
                     icon = customIcons.Fire;
                 } else if (location.type === 'Vehicular Accident') {
                     icon = customIcons.Accident;
+                } else if (location.type === 'Others') {
+                    icon = customIcons.Others;
                 } else {
                     icon = customIcons[location.type];
                 }
@@ -96,6 +99,8 @@ const legazpiBounds = [
 const Dashboard = () => {
     const [isActive, setIsActive] = useState(false);
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [responderId, setResponderId] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     const updateStatus = (status, latitude, longitude) => {
         fetch('http://localhost:8081/api/account/status', {
@@ -176,7 +181,73 @@ const Dashboard = () => {
         return () => clearInterval(interval);
     }, [isActive, currentLocation]);
 
+    useEffect(() => {
+        // Fetch the authenticated responder's ID
+        fetch('http://localhost:8081/checkSession', {
+            method: 'GET',
+            credentials: 'include',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.isAuthenticated) {
+                setResponderId(data.user.id);
+            }
+        })
+        .catch(error => console.error('Error fetching session data:', error));
+    }, []);
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        let interval;
+        if (isActive && responderId) {
+            interval = setInterval(() => {
+                fetch('http://localhost:8081/api/full_reports/closestResponder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ responderId }),
+                    credentials: 'include',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.match) {
+                        setShowModal(true);
+                        // Update the responder situation to 'ongoing' and save the reportId
+                        fetch(`http://localhost:8081/api/responders/${responderId}/situation`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ situation: 'ongoing' }),
+                            credentials: 'include',
+                        })
+                        .then(response => response.json())
+                        .then(() => {
+                            // Save the reportId to the responder_details
+                            fetch(`http://localhost:8081/api/responders/${responderId}/report`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ reportId: data.reportId }),
+                                credentials: 'include',
+                            })
+                            .then(response => response.json())
+                            .then(() => {
+                                navigate('/responder/report-received');
+                            })
+                            .catch(error => console.error('Error updating responder reportId:', error));
+                        })
+                        .catch(error => console.error('Error updating responder situation:', error));
+                    }
+                })
+                .catch(error => console.error('Error checking for reports:', error));
+            }, 5000); // Check every 5 seconds
+        }
+        return () => clearInterval(interval);
+    }, [isActive, responderId, navigate]);
 
     return (
         <div className="index-responder-body">
@@ -187,7 +258,7 @@ const Dashboard = () => {
                     <div id="map" className="map-container">
                         <MapContainer 
                             bounds={legazpiBounds}
-                            style={{ height: '100vh', width: '100vh' }}
+                            style={{ height: '100%', width: '100%' }}
                             scrollWheelZoom={true}>
                             <TileLayer
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -222,6 +293,14 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
+            {showModal && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close" onClick={() => setShowModal(false)}>&times;</span>
+                        <p>Report received</p>
+                    </div>
+                </div>
+            )}
             <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
         </div>
     );
