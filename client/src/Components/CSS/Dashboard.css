@@ -398,7 +398,9 @@ header .image-text .logo-title {
 }
 
 .error-message {
-  color: var(--background);
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
 .table-header {

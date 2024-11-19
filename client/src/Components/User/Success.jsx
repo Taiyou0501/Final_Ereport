@@ -14,37 +14,15 @@ const UserIndex = () => {
   const [longitude, setLongitude] = useState('');
   const [uploadedAt, setUploadedAt] = useState('');
   const [originalUploadedAt, setOriginalUploadedAt] = useState(''); // Store the original uploadedAt
-  const [holdText, setHoldText] = useState("FINDING NEAREST RESPONDER...");
-  const [clickCount, setClickCount] = useState(0);
-  const [fadeClass, setFadeClass] = useState('');
   const [report, setReport] = useState(null);
   const [hasSaved, setHasSaved] = useState(false); // Track if save operation has been performed
   const [notification, setNotification] = useState(''); // State for notification message
   const [location, setLocation] = useState(''); // State to store the place name
   const [loading, setLoading] = useState(true); // State to manage loading
   const [closestResponderId, setClosestResponderId] = useState(''); // State for closest responder ID, default to empty string
+  const [closestBarangayId, setClosestBarangayId] = useState(''); // State for closest barangay ID
   const [victimName, setVictimName] = useState(''); // State for victim name
   const [reporterId, setReporterId] = useState(''); // State for reporter ID
-  
-  const handleNextClick = () => {
-    setFadeClass('fade-out');
-
-    setTimeout(() => {
-      setClickCount(prevCount => {
-        const newCount = prevCount + 1;
-
-        if (newCount === 1) {
-          setHoldText("RESPONDER IS ON THE WAY. ETA: ");
-        } else if (newCount === 2) {
-          setHoldText("RESPONDER IS ON YOUR LOCATION");
-        }
-
-        return newCount;
-      });
-
-      setFadeClass('fade-in');
-    }, 150);
-  };
 
   // Function to calculate distance between two coordinates using Haversine formula
   const calculateDistance = (loc1, loc2) => {
@@ -111,23 +89,23 @@ const UserIndex = () => {
       } else {
         responderType = 'Medical Professional';
       }
-  
+
       // Fetch active responders with the specified responder type
       const respondersResponse = await axios.get('http://localhost:8081/api/responders/active', {
         params: { respondertype: responderType }
       });
       const responders = respondersResponse.data;
-  
+
       console.log('Active responders:', responders); // Log active responders
-  
+
       let closestResponder = 'No responder available';
-  
+
       if (responders.length > 0) {
         // Create a graph with the incident location and responders
         const graph = {};
         const incidentNode = 'incident';
         graph[incidentNode] = {};
-  
+
         responders.forEach(responder => {
           const responderNode = `responder_${responder.id}`;
           graph[responderNode] = {};
@@ -138,11 +116,11 @@ const UserIndex = () => {
           graph[incidentNode][responderNode] = distance;
           graph[responderNode][incidentNode] = distance;
         });
-  
+
         // Run Dijkstra's algorithm
         const distances = dijkstra(graph, incidentNode);
         console.log('Distances:', distances); // Log distances
-  
+
         // Find the closest responder
         let minDistance = Infinity;
         for (const responderNode in distances) {
@@ -151,25 +129,68 @@ const UserIndex = () => {
             closestResponder = responderNode;
           }
         }
-  
+
         console.log('Closest responder:', closestResponder); // Log closest responder
       } else if (report.type === 'Fire Emergency') {
         closestResponder = 'No available Firefighter';
       }
-  
-      // Set the closest responder ID state
+
+      // Fetch active barangays
+      const barangaysResponse = await axios.get('http://localhost:8081/api/barangays/active');
+      const barangays = barangaysResponse.data;
+
+      console.log('Active barangays:', barangays); // Log active barangays
+
+      let closestBarangay = 'No barangay available';
+
+      if (barangays.length > 0) {
+        // Create a graph with the incident location and barangays
+        const graph = {};
+        const incidentNode = 'incident';
+        graph[incidentNode] = {};
+
+        barangays.forEach(barangay => {
+          const barangayNode = `barangay_${barangay.id}`;
+          graph[barangayNode] = {};
+          const distance = calculateDistance(
+            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+            { latitude: parseFloat(barangay.latitude), longitude: parseFloat(barangay.longitude) }
+          );
+          graph[incidentNode][barangayNode] = distance;
+          graph[barangayNode][incidentNode] = distance;
+        });
+
+        // Run Dijkstra's algorithm
+        const distances = dijkstra(graph, incidentNode);
+        console.log('Distances:', distances); // Log distances
+
+        // Find the closest barangay
+        let minDistance = Infinity;
+        for (const barangayNode in distances) {
+          if (barangayNode !== incidentNode && distances[barangayNode] < minDistance) {
+            minDistance = distances[barangayNode];
+            closestBarangay = barangayNode;
+          }
+        }
+
+        console.log('Closest barangay:', closestBarangay); // Log closest barangay
+      }
+
+      // Set the closest responder and barangay ID state
       setClosestResponderId(closestResponder);
+      setClosestBarangayId(closestBarangay);
       console.log('Closest Responder ID:', closestResponder); // Log closest responder ID
-  
+      console.log('Closest Barangay ID:', closestBarangay); // Log closest barangay ID
+
       // Parse the original uploadedAt date string to a Moment.js object
       const parsedDate = moment(uploadedAt, 'M/D/YYYY, h:mm:ss A');
-  
+
       // Subtract 4 hours from the parsed date
       const adjustedUploadedAt = parsedDate.subtract(4, 'hours').toISOString();
-  
+
       // Ensure closestResponderId is correctly set
       console.log('closestResponderId before setting fullReportData:', closestResponder);
-  
+
       const fullReportData = {
         victim: victimName, // Use the victim name from state
         reporterId: reporterId, // Use the reporter ID from state
@@ -181,17 +202,18 @@ const UserIndex = () => {
         uploadedAt: adjustedUploadedAt,
         imageUrl: filePath, // Use the original filePath
         status: 'active', // Set the status to 'active'
-        closestResponderId: closestResponder // Use the formatted closest responder ID
+        closestResponderId: closestResponder, // Use the formatted closest responder ID
+        closestBarangayId: closestBarangay // Use the formatted closest barangay ID
       };
-  
+
       console.log('Full report data before sending:', fullReportData); // Log full report data
-  
+
       await axios.post('http://localhost:8081/api/full_report', fullReportData);
       console.log('Full report saved successfully');
-  
+
       // Set notification message
       setNotification('Data saved successfully!');
-  
+
       // Reformat the date back to its original format
       setUploadedAt(originalUploadedAt);
     } catch (error) {
@@ -201,7 +223,6 @@ const UserIndex = () => {
   };
 
   const handleCombinedClick = async () => {
-    handleNextClick();
     if (!hasSaved) {
       await handleSaveClick();
       setHasSaved(true);
@@ -241,10 +262,10 @@ const UserIndex = () => {
         console.error('Error fetching upload ID:', error);
       }
     };
-  
+
     fetchUploadId();
   }, []);
-  
+
   useEffect(() => {
     const fetchImageDetails = async () => {
       if (imageId) {
@@ -258,7 +279,7 @@ const UserIndex = () => {
           setFilePath(data.filePath); // Store the original filePath
           setLatitude(data.latitude);
           setLongitude(data.longitude);
-          const originalDate = new Date(data.uploadedAt).toLocaleString();
+          const originalDate = moment(data.uploadedAt).format('M/D/YYYY, h:mm:ss A');
           setUploadedAt(originalDate);
           setOriginalUploadedAt(originalDate); // Store the original uploadedAt
           fetchPlaceName(data.latitude, data.longitude); // Fetch place name based on coordinates
@@ -269,7 +290,7 @@ const UserIndex = () => {
         }
       }
     };
-  
+
     fetchImageDetails();
   }, [imageId]);
 
@@ -278,17 +299,19 @@ const UserIndex = () => {
       try {
         const userDetailsResponse = await axios.get('http://localhost:8081/api/user_details', { withCredentials: true });
         const reportId = userDetailsResponse.data.reportId;
-  
+
         if (reportId) {
           const reportResponse = await axios.get(`http://localhost:8081/api/reports/${reportId}`);
           setReport(reportResponse.data);
           setVictimName(reportResponse.data.victim_name); // Set the victim name from the report
+          setClosestResponderId(reportResponse.data.closestResponderId); // Set the closest responder ID from the report
+          setClosestBarangayId(reportResponse.data.closestBarangayId); // Set the closest barangay ID from the report
         }
       } catch (error) {
         console.error('Error fetching report ID from user details:', error);
       }
     };
-  
+
     fetchReportIdFromUserDetails();
   }, []);
 
@@ -302,9 +325,10 @@ const UserIndex = () => {
         console.error('Error fetching session data:', error);
       }
     };
-  
+
     fetchSessionData();
   }, []);
+
 
   const handleNotificationClose = () => {
     setNotification('');
@@ -315,12 +339,6 @@ const UserIndex = () => {
       <UserLogout />
 
       <div className="index-tabs-responder">
-        <p
-          className={`hold-text ${fadeClass}`}
-          style={{ color: holdText === "RESPONDER IS ON YOUR LOCATION" ? 'green' : 'red' }}
-        >
-          {holdText}
-        </p>
         <p className="submit-text">YOUR REPORT: </p>
         <div className="report-container">
           <div className='report-parent-container'>
@@ -333,7 +351,10 @@ const UserIndex = () => {
               <p className="d5">Description: {report ? report.description : '[Insert Description]'}</p>
               <p className="d6">Date/Time: {uploadedAt}</p>
               {hasSaved && (
-                <p className="d6">Closest Responder ID: {closestResponderId}</p>
+                <>
+                  <p className="d6">Closest Responder ID: {closestResponderId}</p>
+                  <p className="d6">Closest Barangay ID: {closestBarangayId}</p>
+                </>
               )}
             </div>
             <div className="notif-picture-container">
@@ -344,11 +365,11 @@ const UserIndex = () => {
               )}
             </div>
           </div>
-          {clickCount < 2 && (
+          {!hasSaved && (
             <button className="menu-btn" onClick={handleCombinedClick}>Send and Save</button>
           )}
 
-          {holdText === "RESPONDER IS ON YOUR LOCATION" && (
+          {hasSaved && (
             <button className="menu-btn" onClick={() => navigate('/user/index')}>
               RETURN TO MAIN MENU
             </button>

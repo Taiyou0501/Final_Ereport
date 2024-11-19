@@ -289,7 +289,6 @@ const Dashboard = () => {
                         >
                             Unavailable
                         </button>
-                        <button onClick={() => navigate('/responder/report-received')}>Next</button>
                     </div>
                 </div>
             </div>

@@ -5,6 +5,7 @@ import logo from '../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faFile, faUsers, faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import moment from 'moment';
 import Logout from '../../Logout';
 
 const AdminReports = () => {
@@ -60,6 +61,10 @@ const AdminReports = () => {
 
   const handleNavigation = (path) => {
     navigate(path, { replace: true });
+  };
+
+  const formatDate = (dateString) => {
+    return moment(dateString).add(12, 'hours').format('M/D/YYYY, h:mm:ss A');
   };
 
   return (
@@ -124,7 +129,7 @@ const AdminReports = () => {
                 <p><strong>Type:</strong> {selectedReport.type}</p>
                 <p><strong>Location:</strong> {selectedReport.location}</p>
                 <p><strong>Coordinates:</strong> Latitude: {selectedReport.latitude}, Longitude: {selectedReport.longitude}</p>
-                <p><strong>Date/Time:</strong> {new Date(selectedReport.uploadedAt).toLocaleString()}</p>
+                <p><strong>Date/Time:</strong> {formatDate(selectedReport.uploadedAt)}</p>
                 <p><strong>Status:</strong> {selectedReport.status}</p>
                 {selectedReport.status !== 'Responded' && (
                   <button className="btn-responded" onClick={() => handleStatusChange(selectedReport.id)}>Mark as Responded</button>
@@ -172,7 +177,7 @@ const AdminReports = () => {
                         <td>{report.description}</td>
                         <td>{report.type}</td>
                         <td>{report.location}</td>
-                        <td>{new Date(report.uploadedAt).toLocaleString()}</td>
+                        <td>{formatDate(report.uploadedAt)}</td>
                         <td>{report.status}</td>
                       </tr>
                     ))}

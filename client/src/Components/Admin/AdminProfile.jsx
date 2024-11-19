@@ -12,6 +12,7 @@ const AdminDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedDetails, setEditedDetails] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -58,14 +59,17 @@ const AdminDashboard = () => {
         credentials: 'include',
         body: JSON.stringify(editedDetails),
       });
+      const data = await response.json();
       if (response.ok) {
         setUserDetails(editedDetails);
         setIsEditing(false);
+        setErrorMessage('');
       } else {
-        console.error('Error updating account details');
+        setErrorMessage(data.message || 'Error updating account details');
       }
     } catch (error) {
       console.error('Error updating account details:', error);
+      setErrorMessage('Error updating account details');
     }
   };
 
@@ -234,11 +238,14 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     {isEditing ? (
-                      <button type="button" onClick={handleSaveClick}>
-                        Save
-                      </button>
+                      <>
+                        {errorMessage && <div className="error-message">{errorMessage}</div>}
+                        <button type="button" className='save' onClick={handleSaveClick}>
+                          Save
+                        </button>
+                      </>
                     ) : (
-                      <button type="button" onClick={handleEditClick}>
+                      <button type="button" className='save' onClick={handleEditClick}>
                         Edit Account
                       </button>
                     )}

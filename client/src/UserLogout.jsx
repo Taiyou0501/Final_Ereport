@@ -1,4 +1,3 @@
-// src/Logout.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ const Logout = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedDetails, setEditedDetails] = useState({});
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogout = () => {
     axios.post('http://localhost:8081/logout', {}, { withCredentials: true })
@@ -61,9 +61,15 @@ const Logout = () => {
       .then(response => {
         setAccountDetails(editedDetails);
         setIsEditing(false);
+        setErrorMessage('');
       })
       .catch(err => {
-        console.error('Error updating account details', err);
+        if (err.response && err.response.data && err.response.data.message) {
+          setErrorMessage(err.response.data.message);
+        } else {
+          console.error('Error updating account details', err);
+          setErrorMessage('Error updating account details');
+        }
       });
   };
 
@@ -164,9 +170,12 @@ const Logout = () => {
                   <p>Unknown role</p>
                 )}
                 {isEditing ? (
-                  <button onClick={handleSaveClick}>Save</button>
+                  <>
+                    {errorMessage && <div className="error-message">{errorMessage}</div>}
+                    <button className='save' onClick={handleSaveClick}>Save</button>
+                  </>
                 ) : (
-                  <button onClick={handleEditClick}>Edit Account</button>
+                  <button className='save' onClick={handleEditClick}>Edit Account</button>
                 )}
               </div>
             ) : (

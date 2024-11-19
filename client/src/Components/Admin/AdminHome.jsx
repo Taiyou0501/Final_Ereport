@@ -90,7 +90,10 @@ const LocationMarker = () => {
             <Popup>
               <div>
                 <p>{location.type}</p>
-                {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '100px', height: '100px' }} />}
+                {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '190px', height: '150px' }} />}
+                {location.status && <p>Status: {location.status}</p>}
+                {location.closestResponderId && <p>Responder: {location.closestResponderId}</p>}
+                {location.closestBarangayId && <p>Barangay: {location.closestBarangayId}</p>}
               </div>
             </Popup>
           </Marker>

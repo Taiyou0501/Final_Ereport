@@ -527,27 +527,12 @@ app.get('/api/user-upload-id', (req, res) => {
 });
 
 app.post('/api/full_report', (req, res) => {
-  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId } = req.body;
+  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId, closestBarangayId } = req.body;
   
   console.log('Received full report data:', req.body); // Log the received data
 
-  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId], (err, result) => {
-    if (err) {
-      console.error('Error inserting full report:', err); // Log the error
-      return res.status(500).json({ message: 'Error inserting full report' });
-    }
-    res.status(200).json({ message: 'Full report added successfully' });
-  });
-});
-
-app.post('/api/full_report', (req, res) => {
-  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId } = req.body;
-  
-  console.log('Received full report data:', req.body); // Log the received data
-
-  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId], (err, result) => {
+  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId, closestBarangayId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId, closestBarangayId], (err, result) => {
     if (err) {
       console.error('Error inserting full report:', err); // Log the error
       return res.status(500).json({ message: 'Error inserting full report' });
@@ -670,13 +655,13 @@ app.post('/api/update-victim-name', (req, res) => {
 });
 
 app.get('/api/full_reports/locations', (req, res) => {
-  const sql = 'SELECT latitude, longitude, type, imageUrl FROM full_report WHERE status = "active"';
+  const sql = 'SELECT latitude, longitude, type, imageUrl, status, closestResponderId, closestBarangayId FROM full_report WHERE status IN ("active", "waiting for responder")';
   db.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching locations:', err);
       return res.status(500).json({ message: 'Error fetching locations' });
     }
-    console.log('Active reports:', results); // Log the results
+    console.log('Active and waiting for responder reports:', results); // Log the results
     res.status(200).json(results);
   });
 });
@@ -819,10 +804,10 @@ app.put('/api/responder/resetReport', (req, res) => {
 
 app.put('/api/full_report/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status, eta } = req.body;
+  const { status, eta, barangay_eta } = req.body;
 
-  const sql = 'UPDATE full_report SET status = ?, eta = ? WHERE id = ?';
-  db.query(sql, [status, eta, id], (err, result) => {
+  const sql = 'UPDATE full_report SET status = ?, eta = ?, barangay_eta = ? WHERE id = ?';
+  db.query(sql, [status, eta, barangay_eta, id], (err, result) => {
     if (err) {
       console.error('Error updating report status:', err);
       return res.status(500).json({ message: 'Error updating report status' });
@@ -842,45 +827,191 @@ app.put('/updateAccount', (req, res) => {
   const table = user.table;
   const currentUsername = user.username;
 
-  let sql = `UPDATE ${table} SET firstname = ?, lastname = ?, username = ?, email = ?, password = ?, cpnumber = ?`;
-  const values = [firstname, lastname, username, email, password, cpnumber];
+  // Check if the new username already exists in any table
+  const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
 
-  if (table === 'responder_details') {
-    sql += `, respondertype = ?, vehicle = ?`;
-    values.push(respondertype, vehicle);
-  } else if (table === 'police_details') {
-    sql += `, unit = ?, rank = ?`;
-    values.push(unit, rank);
-  } else if (table === 'barangay_details') {
-    sql += `, barangay = ?`;
-    values.push(barangay);
-  } else if (table === 'unit_details') {
-    sql += `, unit = ?`;
-    values.push(unit);
-  }
+  let found = false;
 
-  sql += ` WHERE username = ?`;
-  values.push(currentUsername);
+  const checkUsername = (table, callback) => {
+    const query = `SELECT * FROM ${table} WHERE username = ? AND username != ?`;
+    db.query(query, [username, currentUsername], (err, results) => {
+      if (err) return callback(err);
 
-  db.query(sql, values, (err, result) => {
-    if (err) {
-      console.error('Error updating account details:', err);
-      return res.status(500).json({ message: 'Error updating account details' });
+      if (results.length > 0) {
+        found = true;
+        return callback(null, true);
+      }
+
+      callback(null, false);
+    });
+  };
+
+  const checkAllTables = (index) => {
+    if (index >= tables.length) {
+      if (!found) {
+        // Update the account details
+        let sql = `UPDATE ${table} SET firstname = ?, lastname = ?, username = ?, email = ?, password = ?, cpnumber = ?`;
+        const values = [firstname, lastname, username, email, password, cpnumber];
+
+        if (table === 'responder_details') {
+          sql += `, respondertype = ?, vehicle = ?`;
+          values.push(respondertype, vehicle);
+        } else if (table === 'police_details') {
+          sql += `, unit = ?, rank = ?`;
+          values.push(unit, rank);
+        } else if (table === 'barangay_details') {
+          sql += `, barangay = ?`;
+          values.push(barangay);
+        } else if (table === 'unit_details') {
+          sql += `, unit = ?`;
+          values.push(unit);
+        }
+
+        sql += ` WHERE username = ?`;
+        values.push(currentUsername);
+
+        db.query(sql, values, (err, result) => {
+          if (err) {
+            console.error('Error updating account details:', err);
+            return res.status(500).json({ message: 'Error updating account details' });
+          }
+
+          // Update session user data
+          req.session.user.username = username;
+          req.session.save(err => {
+            if (err) {
+              console.error('Error saving session:', err);
+              return res.status(500).json({ message: 'Error saving session' });
+            }
+            res.status(200).json({ message: 'Account updated successfully' });
+          });
+        });
+      } else {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      return;
     }
 
-    // Update session user data
-    req.session.user.username = username;
-    req.session.save(err => {
-      if (err) {
-        console.error('Error saving session:', err);
-        return res.status(500).json({ message: 'Error saving session' });
+    checkUsername(tables[index], (err, exists) => {
+      if (err) return res.status(500).json(err);
+      if (exists) {
+        return res.status(400).json({ message: 'Username already exists' });
       }
-      res.status(200).json({ message: 'Account updated successfully' });
+      checkAllTables(index + 1);
+    });
+  };
+
+  checkAllTables(0);
+});
+
+app.get('/api/barangays/active', (req, res) => {
+  const sql = 'SELECT id, latitude, longitude FROM barangay_details WHERE situation = "active"';
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching active barangays:', err);
+      return res.status(500).json({ message: 'Error fetching active barangays' });
+    }
+    res.status(200).json(results);
+  });
+});
+
+app.post('/api/full_reports/closestBarangay', (req, res) => {
+  const { barangayId } = req.body;
+  const closestBarangayId = `barangay_${barangayId}`;
+  const sql = 'SELECT id FROM full_report WHERE closestBarangayId = ? AND status = "active"';
+
+  db.query(sql, [closestBarangayId], (err, results) => {
+    if (err) {
+      console.error('Error fetching reports:', err);
+      return res.status(500).json({ message: 'Error fetching reports' });
+    }
+    if (results.length > 0) {
+      return res.status(200).json({ match: true, reportId: results[0].id });
+    }
+    res.status(200).json({ match: false });
+  });
+});
+
+app.put('/api/barangays/:id/report', (req, res) => {
+  const { id } = req.params;
+  const { reportId } = req.body;
+  const sql = 'UPDATE barangay_details SET reportId = ? WHERE id = ?';
+
+  db.query(sql, [reportId, id], (err, result) => {
+    if (err) {
+      console.error('Error updating barangay reportId:', err);
+      return res.status(500).json({ message: 'Error updating barangay reportId' });
+    }
+    res.status(200).json({ message: 'Barangay reportId updated' });
+  });
+});
+
+app.put('/api/barangays/:id/situation', (req, res) => {
+  const { id } = req.params;
+  const { situation } = req.body;
+  const sql = 'UPDATE barangay_details SET situation = ? WHERE id = ?';
+
+  db.query(sql, [situation, id], (err, result) => {
+    if (err) {
+      console.error('Error updating barangay situation:', err);
+      return res.status(500).json({ message: 'Error updating barangay situation' });
+    }
+    res.status(200).json({ message: 'Barangay situation updated' });
+  });
+});
+
+app.get('/api/barangay/report', (req, res) => {
+  const { user } = req.session;
+
+  if (!user || user.table !== 'barangay_details') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const sql = `SELECT reportId FROM barangay_details WHERE username = ?`;
+  db.query(sql, [user.username], (err, results) => {
+    if (err) {
+      console.error('Error fetching barangay reportId:', err);
+      return res.status(500).json({ message: 'Error fetching barangay reportId' });
+    }
+    if (results.length === 0 || !results[0].reportId) {
+      return res.status(404).json({ message: 'No report found for this barangay' });
+    }
+
+    const reportId = results[0].reportId;
+    const reportSql = `SELECT id, type, latitude, longitude, victim, reporterId, location, description, uploadedAt, imageUrl, barangay_eta FROM full_report WHERE id = ?`;
+    db.query(reportSql, [reportId], (err, reportResults) => {
+      if (err) {
+        console.error('Error fetching report details:', err);
+        return res.status(500).json({ message: 'Error fetching report details' });
+      }
+      if (reportResults.length === 0) {
+        return res.status(404).json({ message: 'Report not found' });
+      }
+      res.status(200).json(reportResults[0]);
     });
   });
 });
 
+app.put('/api/barangay/resetReport', (req, res) => {
+  const { user } = req.session;
 
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const table = user.table;
+  const username = user.username;
+  const sql = `UPDATE ${table} SET reportId = 0 WHERE username = ?`;
+
+  db.query(sql, [username], (err, result) => {
+    if (err) {
+      console.error('Error updating reportId:', err);
+      return res.status(500).json({ message: 'Error updating reportId' });
+    }
+    res.status(200).json({ message: 'ReportId reset successfully' });
+  });
+});
 
 app.listen(8081, () => {
     console.log("Listening...")

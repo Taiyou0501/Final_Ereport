@@ -100,6 +100,9 @@ const legazpiBounds = [
 const Dashboard = () => {
     const [isActive, setIsActive] = useState(false);
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [barangayId, setBarangayId] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate(); // Ensure navigate is declared before useEffect
 
     const updateStatus = (status, latitude, longitude) => {
         fetch('http://localhost:8081/api/account/status', {
@@ -180,7 +183,71 @@ const Dashboard = () => {
         return () => clearInterval(interval);
     }, [isActive, currentLocation]);
 
-    const navigate = useNavigate();
+    useEffect(() => {
+        // Fetch the authenticated barangay ID
+        fetch('http://localhost:8081/checkSession', {
+            method: 'GET',
+            credentials: 'include',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.isAuthenticated) {
+                setBarangayId(data.user.id);
+            }
+        })
+        .catch(error => console.error('Error fetching session data:', error));
+    }, []);
+
+    useEffect(() => {
+        let interval;
+        if (isActive && barangayId) {
+            interval = setInterval(() => {
+                fetch('http://localhost:8081/api/full_reports/closestBarangay', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ barangayId }),
+                    credentials: 'include',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.match) {
+                        setShowModal(true);
+                        // Update the barangay situation to 'ongoing' and save the reportId
+                        fetch(`http://localhost:8081/api/barangays/${barangayId}/situation`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ situation: 'ongoing' }),
+                            credentials: 'include',
+                        })
+                        .then(response => response.json())
+                        .then(() => {
+                            // Save the reportId to the barangay_details
+                            fetch(`http://localhost:8081/api/barangays/${barangayId}/report`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ reportId: data.reportId }),
+                                credentials: 'include',
+                            })
+                            .then(response => response.json())
+                            .then(() => {
+                                navigate('/barangay/notification');
+                            })
+                            .catch(error => console.error('Error updating barangay reportId:', error));
+                        })
+                        .catch(error => console.error('Error updating barangay situation:', error));
+                    }
+                })
+                .catch(error => console.error('Error checking for reports:', error));
+            }, 5000); // Check every 5 seconds
+        }
+        return () => clearInterval(interval);
+    }, [isActive, barangayId, navigate]);
 
     return (
         <div className="index-responder-body">
@@ -222,10 +289,18 @@ const Dashboard = () => {
                         >
                             Unavailable
                         </button>
-                        <button onClick={() => navigate('/responder/report-received')}>Next</button>
+                        <button onClick={() => navigate('/barangay/notification')}>Next</button>
                     </div>
                 </div>
             </div>
+            {showModal && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close" onClick={() => setShowModal(false)}>&times;</span>
+                        <p>Report received</p>
+                    </div>
+                </div>
+            )}
             <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
         </div>
     );

@@ -577,13 +577,13 @@ input {
   color: #007bff; // Blue color on hover for better visibility
 }
 
-button {
+.save {
   font-size: 1rem; // Adjust font size for buttons
   padding: 8px 12px; // Adjust padding for buttons
   background-color: black;
   color: white;
 }
-
+ 
 
 /* Additional styles for mobile responsiveness */
 @media (max-width: 480px) and (orientation: portrait) {

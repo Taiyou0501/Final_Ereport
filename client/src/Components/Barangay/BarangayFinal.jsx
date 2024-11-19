@@ -1,26 +1,89 @@
 import '../CSS/responder.css';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
-import React from 'react';
-import samplepic from '../Assets/sampleaccident.png';
+import React, { useState, useEffect } from 'react';
 import UserLogout from '../../UserLogout';
 
 const BarangayFinal = () => {
     const navigate = useNavigate();
+    const [reportDetails, setReportDetails] = useState(null);
+    const [userPosition, setUserPosition] = useState(null);
+    const [distance, setDistance] = useState(null);
 
-    const handleRespondClick = () => {
-        localStorage.setItem('victim', '[Insert Victim Name]');
-        localStorage.setItem('reporterId', '[Insert Reporter ID]');
-        localStorage.setItem('distance', '[Distance]');
-        localStorage.setItem('location', '[Insert Location]');
-        localStorage.setItem('description', '[Insert Description]');
-        localStorage.setItem('dateTime', '[Insert Date/Time]');
+    useEffect(() => {
+        const fetchReportDetails = async () => {
+            try {
+                const response = await fetch('http://localhost:8081/api/barangay/report', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setReportDetails(data);
+                } else {
+                    console.error('Error fetching report details:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching report details:', error);
+            }
+        };
+
+        fetchReportDetails();
+    }, []);
+
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserPosition([position.coords.latitude, position.coords.longitude]);
+                },
+                (error) => {
+                    console.error('Error getting current position:', error);
+                }
+            );
+        }
+    }, []);
+
+    useEffect(() => {
+        if (reportDetails && userPosition) {
+            const distance = calculateDistance(
+                userPosition[0],
+                userPosition[1],
+                reportDetails.latitude,
+                reportDetails.longitude
+            );
+            setDistance(distance);
+        }
+    }, [reportDetails, userPosition]);
+
+    const handleBackToMainMenu = async () => {
+        try {
+            const response = await fetch('http://localhost:8081/api/barangay/resetReport', {
+                method: 'PUT',
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (response.ok) {
+                console.log(data.message);
+                localStorage.setItem('situationStatus', 'Unavailable');
+                navigate('/barangay/home');
+            } else {
+                console.error('Error resetting reportId:', data.message);
+            }
+        } catch (error) {
+            console.error('Error resetting reportId:', error);
+        }
     };
 
-    const handleBackToMainMenu = () => {
-        localStorage.setItem('situationStatus', 'Unavailable');
-        navigate('/barangay/home');
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371; // Radius of the Earth in kilometers
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Distance in kilometers
+        return distance.toFixed(2); // Return distance with 2 decimal places
     };
 
     return (
@@ -34,16 +97,27 @@ const BarangayFinal = () => {
                     <div className="final-report-container">
                         <p className="freport-header-text">Emergency Report Details</p>
                         <div className="final-report-details-container">
-                            <p className="fd1">Victim: {localStorage.getItem('victim')}</p>
-                            <p className="fd2">Reporter ID: {localStorage.getItem('reporterId')}</p>
-                            <p className="fd3">Distance: {localStorage.getItem('distance')}</p>
-                            <p className="fd4">Location: {localStorage.getItem('location')}</p>
-                            <p className="fd5">Description: {localStorage.getItem('description')}</p>
-                            <p className="fd6">Date/Time: {localStorage.getItem('dateTime')}</p>
+                            {reportDetails ? (
+                                <>
+                                    <p className="fd1">ID: {reportDetails.id}</p>
+                                    <p className="fd2">Type: {reportDetails.type}</p>
+                                    <p className="fd3">Victim: {reportDetails.victim}</p>
+                                    <p className="fd4">Reporter ID: {reportDetails.reporterId}</p>
+                                    <p className="fd6">Location: {reportDetails.location}</p>
+                                    <p className="fd6">Latitude: {reportDetails.latitude}</p>
+                                    <p className="fd6">Longitude: {reportDetails.longitude}</p>
+                                    <p className="fd6">Description: {reportDetails.description}</p>
+                                    <p className="fd6">Date/Time: {new Date(reportDetails.uploadedAt).toLocaleString()}</p>
+                                </>
+                            ) : (
+                                <p>Loading report details...</p>
+                            )}
                         </div>
-                    </div>
-                    <div className="picture-container">
-                        <img src={samplepic} alt="Scene Photo" className="scene-picture" />
+                        <div className="picture-container">
+                            {reportDetails && reportDetails.imageUrl && (
+                                <img src={`http://localhost:8081/${reportDetails.imageUrl}`} alt="Scene Photo" className="scene-picture" />
+                            )}
+                        </div>
                     </div>
                 </div>
                 
@@ -55,6 +129,6 @@ const BarangayFinal = () => {
             </div>
         </div>
     );
+};
 
-}
 export default BarangayFinal;
