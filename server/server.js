@@ -111,7 +111,10 @@ app.post('/register', (req, res) => {
 });
 
 db.connect(err => {
-  if (err) throw err;
+  if (err) {
+    console.error('Error connecting to database:', err);
+    return;
+  }
   console.log('Database connected!');
 });
 
