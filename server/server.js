@@ -9,7 +9,11 @@ const MySQLStore = require('express-mysql-session')(session);
 
 const app = express()
 
-const allowedOrigins = ['http://localhost:5173', 'http://192.168.0.77:5173'];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://192.168.0.77:5173',
+  'https://your-client-deployed-url.com' // Add your deployed client URL here
+];
 
 app.use(cors({
   origin: function (origin, callback) {

@@ -5,6 +5,8 @@ import { faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import api from '../../api/axios';
+
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -16,7 +18,7 @@ const Login = () => {
     event.preventDefault();
     console.log(username, password);
 
-    axios.post('http://localhost:8081/checkAllTables', { username, password }, { withCredentials: true })
+    api.post('/checkAllTables', { username, password })
       .then(res => {
         console.log(res.data);
         if (res.data.message === "Login Successful") {
