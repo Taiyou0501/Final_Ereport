@@ -23,7 +23,7 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
+      callback(null, true); 
     } else {
       callback(new Error('Not allowed by CORS'));
     }
@@ -42,13 +42,12 @@ const sessionStore = new MySQLStore({
 
 app.use(session({
   key: 'session_cookie_name',
-  secret: process.env.SESSION_SECRET,
+  secret: 'Te8LtamAsYFGxL6aS/VA2z1l/mQICv8rdX/YjX59C2o=',
   store: sessionStore,
   resave: false,
   saveUninitialized: true,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    secure: false,
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
 }));
