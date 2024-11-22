@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Register.css";
-import axios from 'axios';
+import api from '../../config/axios';
 
 const Register = () => {
   const [values, setValues] = useState({
@@ -17,23 +17,28 @@ const Register = () => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log(values);
-    axios.post('http://localhost:8081/register', values)
-      .then(res => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        const response = await api.post('/register', {
+            firstname: values.firstname,
+            lastname: values.lastname,
+            username: values.username,
+            email: values.email,
+            password: values.password,
+            cpnumber: values.cpnumber
+        });
         console.log("Registered Successfully");
         alert("Registered Successfully");
         window.location.href = "/login";
-      })
-      .catch(err => {
-        console.log(err);
-        if (err.response && err.response.data && err.response.data.message) {
-          setError(err.response.data.message);
+    } catch (error) {
+        console.error('Registration error:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+            setError(error.response.data.message);
         } else {
-          setError('An error occurred. Please try again.');
+            setError('An error occurred. Please try again.');
         }
-      });
+    }
   };
 
   return (
