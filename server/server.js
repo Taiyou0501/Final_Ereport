@@ -5,6 +5,7 @@ const e = require('express');
 const multer = require('multer');
 const path = require('path');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 
 const app = express()
 
@@ -22,12 +23,25 @@ app.use(cors({
 }));
 app.use(express.json());
 
+const sessionStore = new MySQLStore({
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: '',
+  database: 'e-report'
+});
+
 app.use(session({
+  key: 'session_cookie_name',
   secret: 'Te8LtamAsYFGxL6aS/VA2z1l/mQICv8rdX/YjX59C2o=',
+  store: sessionStore,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }
-}))
+  cookie: { 
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
+}));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
