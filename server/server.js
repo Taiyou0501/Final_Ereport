@@ -17,7 +17,7 @@ const app = express()
 const allowedOrigins = [
   'http://localhost:5173',
   'http://192.168.0.77:5173',
-  'https://your-client-deployed-url.com' // Add your deployed client URL here
+  'https://ereport-4gl8.vercel.app' // Add your deployed client URL here
 ];
 
 app.use(cors({
@@ -42,12 +42,13 @@ const sessionStore = new MySQLStore({
 
 app.use(session({
   key: 'session_cookie_name',
-  secret: 'Te8LtamAsYFGxL6aS/VA2z1l/mQICv8rdX/YjX59C2o=',
+  secret: process.env.SESSION_SECRET,
   store: sessionStore,
   resave: false,
   saveUninitialized: true,
   cookie: { 
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
 }));
