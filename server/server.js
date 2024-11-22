@@ -1,3 +1,8 @@
+const env = process.env.NODE_ENV || 'development';
+require('dotenv').config({
+  path: `.env.${env}`
+});
+
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors');
@@ -28,11 +33,11 @@ app.use(cors({
 app.use(express.json());
 
 const sessionStore = new MySQLStore({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '',
-  database: 'e-report'
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE
 });
 
 app.use(session({
@@ -60,10 +65,11 @@ const upload = multer({ storage });
 
 
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'e-report'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  port: process.env.DB_PORT
 })
 
 app.post('/register', (req, res) => {

@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import "./Login.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import api from '../../config/axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import api from '../../api/axios';
-
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,45 +12,45 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log(username, password);
-
-    api.post('/checkAllTables', { username, password })
-      .then(res => {
-        console.log(res.data);
-        if (res.data.message === "Login Successful") {
-          console.log(`Redirecting to dashboard for table: ${res.data.table}`);
-          login(); // Set the authentication state
-          switch (res.data.table) {
-            case 'admin_details':
-              navigate("/admin/home");
-              break;
-            case 'user_details':
-              navigate("/user/index");
-              break;
-            case 'police_details':
-              navigate("/police/home");
-              break;
-            case 'responder_details':
-              navigate("/responder/home");
-              break;
-            case 'unit_details':
-              navigate("/unit/home");
-              break;
-            case 'barangay_details':
-              navigate("/barangay/home");
-              break;
-            default:
-              alert("Unknown table");
-          }
-        } else {
-          alert("Invalid Credentials");
-        }
-      })
-      .catch(error => {
-        console.error("There was an error checking the tables!", error);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/checkAllTables', {
+        username,
+        password
       });
+      console.log(response.data);
+      if (response.data.message === "Login Successful") {
+        console.log(`Redirecting to dashboard for table: ${response.data.table}`);
+        login(); // Set the authentication state
+        switch (response.data.table) {
+          case 'admin_details':
+            navigate("/admin/home");
+            break;
+          case 'user_details':
+            navigate("/user/index");
+            break;
+          case 'police_details':
+            navigate("/police/home");
+            break;
+          case 'responder_details':
+            navigate("/responder/home");
+            break;
+          case 'unit_details':
+            navigate("/unit/home");
+            break;
+          case 'barangay_details':
+            navigate("/barangay/home");
+            break;
+          default:
+            alert("Unknown table");
+        }
+      } else {
+        alert("Invalid Credentials");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (
