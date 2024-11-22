@@ -3,7 +3,7 @@ import "./Login.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import api from '../../config/axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 
 const Login = () => {
@@ -78,9 +78,16 @@ const Login = () => {
             <button className="btn-login" type="submit">   
               Login
             </button>
-            <div className="register-link-login">
-              <p>Don't have an account? <a href="/register">Create Account</a></p>
-            </div> 
+            <Link 
+              to="/register" 
+              className="register-link-login"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/register');
+              }}
+            >
+              Create Account
+            </Link>
           </form>
         </div>
       </div>
