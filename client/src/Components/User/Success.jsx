@@ -82,30 +82,27 @@ const UserIndex = () => {
 
   const handleSaveClick = async () => {
     try {
-      // Determine the responder type based on the report type
       let responderType = '';
       if (report.type === 'Fire Emergency') {
         responderType = 'Firefighter';
       } else {
         responderType = 'Medical Professional';
       }
-
-      // Fetch active responders with the specified responder type
+  
       const respondersResponse = await axios.get('http://localhost:8081/api/responders/active', {
         params: { respondertype: responderType }
       });
       const responders = respondersResponse.data;
-
-      console.log('Active responders:', responders); // Log active responders
-
+  
+      console.log('Active responders:', responders);
+  
       let closestResponder = 'No responder available';
-
+  
       if (responders.length > 0) {
-        // Create a graph with the incident location and responders
         const graph = {};
         const incidentNode = 'incident';
         graph[incidentNode] = {};
-
+  
         responders.forEach(responder => {
           const responderNode = `responder_${responder.id}`;
           graph[responderNode] = {};
@@ -116,39 +113,35 @@ const UserIndex = () => {
           graph[incidentNode][responderNode] = distance;
           graph[responderNode][incidentNode] = distance;
         });
-
-        // Run Dijkstra's algorithm
+  
         const distances = dijkstra(graph, incidentNode);
-        console.log('Distances:', distances); // Log distances
-
-        // Find the closest responder
+        console.log('Distances:', distances);
+  
         let minDistance = Infinity;
         for (const responderNode in distances) {
-          if (responderNode !== incidentNode && distances[responderNode] < minDistance) {
+          if (responderNode !== incidentNode && distances[responderNode] < minDistance && distances[responderNode] <= 3) {
             minDistance = distances[responderNode];
             closestResponder = responderNode;
           }
         }
-
-        console.log('Closest responder:', closestResponder); // Log closest responder
+  
+        console.log('Closest responder:', closestResponder);
       } else if (report.type === 'Fire Emergency') {
         closestResponder = 'No available Firefighter';
       }
-
-      // Fetch active barangays
+  
       const barangaysResponse = await axios.get('http://localhost:8081/api/barangays/active');
       const barangays = barangaysResponse.data;
-
-      console.log('Active barangays:', barangays); // Log active barangays
-
+  
+      console.log('Active barangays:', barangays);
+  
       let closestBarangay = 'No barangay available';
-
+  
       if (barangays.length > 0) {
-        // Create a graph with the incident location and barangays
         const graph = {};
         const incidentNode = 'incident';
         graph[incidentNode] = {};
-
+  
         barangays.forEach(barangay => {
           const barangayNode = `barangay_${barangay.id}`;
           graph[barangayNode] = {};
@@ -159,12 +152,10 @@ const UserIndex = () => {
           graph[incidentNode][barangayNode] = distance;
           graph[barangayNode][incidentNode] = distance;
         });
-
-        // Run Dijkstra's algorithm
+  
         const distances = dijkstra(graph, incidentNode);
-        console.log('Distances:', distances); // Log distances
-
-        // Find the closest barangay
+        console.log('Distances:', distances);
+  
         let minDistance = Infinity;
         for (const barangayNode in distances) {
           if (barangayNode !== incidentNode && distances[barangayNode] < minDistance) {
@@ -172,49 +163,41 @@ const UserIndex = () => {
             closestBarangay = barangayNode;
           }
         }
-
-        console.log('Closest barangay:', closestBarangay); // Log closest barangay
+  
+        console.log('Closest barangay:', closestBarangay);
       }
-
-      // Set the closest responder and barangay ID state
+  
       setClosestResponderId(closestResponder);
       setClosestBarangayId(closestBarangay);
-      console.log('Closest Responder ID:', closestResponder); // Log closest responder ID
-      console.log('Closest Barangay ID:', closestBarangay); // Log closest barangay ID
-
-      // Parse the original uploadedAt date string to a Moment.js object
+      console.log('Closest Responder ID:', closestResponder);
+      console.log('Closest Barangay ID:', closestBarangay);
+  
       const parsedDate = moment(uploadedAt, 'M/D/YYYY, h:mm:ss A');
-
-      // Subtract 4 hours from the parsed date
       const adjustedUploadedAt = parsedDate.subtract(4, 'hours').toISOString();
-
-      // Ensure closestResponderId is correctly set
+  
       console.log('closestResponderId before setting fullReportData:', closestResponder);
-
+  
       const fullReportData = {
-        victim: victimName, // Use the victim name from state
-        reporterId: reporterId, // Use the reporter ID from state
+        victim: victimName,
+        reporterId: reporterId,
         type: report ? report.type : '[Accident Type]',
         latitude,
         longitude,
-        location, // Include the location in the data sent to the backend
+        location,
         description: report ? report.description : '[Insert Description]' + (closestResponder !== 'No responder available' ? '' : ' No responder available.'),
         uploadedAt: adjustedUploadedAt,
-        imageUrl: filePath, // Use the original filePath
-        status: 'active', // Set the status to 'active'
-        closestResponderId: closestResponder, // Use the formatted closest responder ID
-        closestBarangayId: closestBarangay // Use the formatted closest barangay ID
+        imageUrl: filePath,
+        status: 'active',
+        closestResponderId: closestResponder,
+        closestBarangayId: closestBarangay
       };
-
-      console.log('Full report data before sending:', fullReportData); // Log full report data
-
+  
+      console.log('Full report data before sending:', fullReportData);
+  
       await axios.post('http://localhost:8081/api/full_report', fullReportData);
       console.log('Full report saved successfully');
-
-      // Set notification message
+  
       setNotification('Data saved successfully!');
-
-      // Reformat the date back to its original format
       setUploadedAt(originalUploadedAt);
     } catch (error) {
       console.error('Error saving full report:', error);

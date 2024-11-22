@@ -37,6 +37,8 @@ const LocationMarker = () => {
   const [positions, setPositions] = useState([]);
   const [reportLocations, setReportLocations] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [activeResponders, setActiveResponders] = useState([]);
+  const [activeBarangays, setActiveBarangays] = useState([]);
 
   useEffect(() => {
     fetch('http://localhost:8081/api/full_reports/locations')
@@ -46,6 +48,26 @@ const LocationMarker = () => {
         setReportLocations(data);
       })
       .catch(error => console.error('Error fetching report locations:', error));
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:8081/api/active-responders')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Fetched active responders:', data); // Log the fetched data
+        setActiveResponders(data);
+      })
+      .catch(error => console.error('Error fetching active responders:', error));
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:8081/api/active-barangays')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Fetched active barangays:', data); // Log the fetched data
+        setActiveBarangays(data);
+      })
+      .catch(error => console.error('Error fetching active barangays:', error));
   }, []);
 
   const map = useMapEvents({
@@ -99,6 +121,24 @@ const LocationMarker = () => {
           </Marker>
         );
       })}
+      {activeResponders.map((responder, index) => (
+        <Marker key={`responder-${index}`} position={[responder.latitude, responder.longitude]} icon={customIcons.Responder}>
+          <Popup>
+            <div>
+              <p>Responder: {responder.respondertype}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+      {activeBarangays.map((barangay, index) => (
+        <Marker key={`barangay-${index}`} position={[barangay.latitude, barangay.longitude]} icon={customIcons.Barangay}>
+          <Popup>
+            <div>
+              <p>Barangay: {barangay.barangay}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
       {currentLocation && (
         <Marker position={currentLocation} icon={L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] })}>
           <Popup>You are here</Popup>

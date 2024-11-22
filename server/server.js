@@ -8,8 +8,16 @@ const session = require('express-session');
 
 const app = express()
 
+const allowedOrigins = ['http://localhost:5173', 'http://192.168.0.77:5173'];
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -1010,6 +1018,28 @@ app.put('/api/barangay/resetReport', (req, res) => {
       return res.status(500).json({ message: 'Error updating reportId' });
     }
     res.status(200).json({ message: 'ReportId reset successfully' });
+  });
+});
+
+app.get('/api/active-responders', (req, res) => {
+  const sql = 'SELECT id, latitude, longitude, respondertype FROM responder_details WHERE situation = "active"';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching active responders:', err);
+      return res.status(500).json({ message: 'Error fetching active responders' });
+    }
+    res.status(200).json(results);
+  });
+});
+
+app.get('/api/active-barangays', (req, res) => {
+  const sql = 'SELECT id, latitude, longitude, barangay FROM barangay_details WHERE situation = "active"';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching active barangays:', err);
+      return res.status(500).json({ message: 'Error fetching active barangays' });
+    }
+    res.status(200).json(results);
   });
 });
 

@@ -14,6 +14,17 @@ const Logout = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedDetails, setEditedDetails] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
+  const [firstName, setFirstName] = useState('USER'); // State to store the first name
+
+  useEffect(() => {
+    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
+      .then(response => {
+        setFirstName(response.data.user.firstname); // Set the first name from the session data
+      })
+      .catch(err => {
+        console.error('Error fetching session data', err);
+      });
+  }, []);
 
   const handleLogout = () => {
     axios.post('http://localhost:8081/logout', {}, { withCredentials: true })
@@ -81,7 +92,7 @@ const Logout = () => {
       <header className="index-header-tab">
         <button className="index-menu-btn">
           <FontAwesomeIcon icon={faBars} />
-          <span className="index-menu-text">HELLO, USER</span>
+          <span className="index-menu-text">HELLO, {firstName}</span>
         </button>
         <div className="index-responder-actions">
           <button className="index-profile-btn" onClick={handleProfileClick}>
