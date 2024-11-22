@@ -20,6 +20,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+        console.log('Making request to:', api.defaults.baseURL + '/register');
         const response = await api.post('/register', {
             firstname: values.firstname,
             lastname: values.lastname,
@@ -28,6 +29,7 @@ const Register = () => {
             password: values.password,
             cpnumber: values.cpnumber
         });
+        console.log('Response:', response.data);
         console.log("Registered Successfully");
         alert("Registered Successfully");
         window.location.href = "/login";
