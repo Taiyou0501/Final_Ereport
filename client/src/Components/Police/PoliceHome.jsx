@@ -4,7 +4,7 @@ import ambulanceIcon from '../Assets/responder.png';
 import fireIcon from '../Assets/fire1.png';
 import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
-import policeIcon from '../Assets/police1.png'; 
+import policeIcon from '../Assets/Police1.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
 import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 import React, { useState, useEffect } from 'react';
