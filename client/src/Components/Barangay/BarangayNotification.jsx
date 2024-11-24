@@ -109,6 +109,28 @@ const BarangayNotification = () => {
             const etaMinutes = (distance / averageSpeed) * 60; // ETA in minutes
             const roundedEta = Math.ceil(etaMinutes); // Round up to the nearest whole number
             setBarangayEta(roundedEta);
+
+            // Get barangay ID from session
+            fetch('http://localhost:8081/checkSession', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(sessionData => {
+                // Update closestBarangayId to show (RESPONDING)
+                fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/barangayStatus`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        closestBarangayId: `barangay_${sessionData.user.id} (RESPONDING)`,
+                        barangay_eta: roundedEta 
+                    }),
+                    credentials: 'include'
+                }).catch(error => {
+                    console.error('Error updating barangay status:', error);
+                });
+            });
         }
     };
 
@@ -116,7 +138,7 @@ const BarangayNotification = () => {
         intervalRef.current = setInterval(() => {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
+                    async (position) => {
                         const newUserPosition = [position.coords.latitude, position.coords.longitude];
                         setUserPosition(newUserPosition);
 
@@ -131,7 +153,28 @@ const BarangayNotification = () => {
 
                             if (newDistance <= 0.1) {
                                 clearInterval(intervalRef.current);
-                                navigate('/barangay/final');
+                                
+                                try {
+                                    const sessionResponse = await fetch('http://localhost:8081/checkSession', {
+                                        credentials: 'include'
+                                    });
+                                    const sessionData = await sessionResponse.json();
+
+                                    // Update closestBarangayId to show (RESPONDED)
+                                    await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/barangayStatus`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ 
+                                            closestBarangayId: `barangay_${sessionData.user.id} (RESPONDED)`
+                                        }),
+                                        credentials: 'include'
+                                    });
+                                    navigate('/barangay/final');
+                                } catch (error) {
+                                    console.error('Error updating status:', error);
+                                }
                             }
                         }
                     },

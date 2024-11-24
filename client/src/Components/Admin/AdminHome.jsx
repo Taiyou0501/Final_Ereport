@@ -6,7 +6,7 @@ import ambulanceIcon from '../Assets/responder.png';
 import fireIcon from '../Assets/fire1.png';
 import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
-import policeIcon from '../Assets/Police1.png'; 
+import policeIcon from '../Assets/police station.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
 import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -121,15 +121,37 @@ const LocationMarker = () => {
           </Marker>
         );
       })}
-      {activeResponders.map((responder, index) => (
-        <Marker key={`responder-${index}`} position={[responder.latitude, responder.longitude]} icon={customIcons.Responder}>
-          <Popup>
-            <div>
-              <p>Responder: {responder.respondertype}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {activeResponders.map((responder, index) => {
+        // Determine which icon to use based on responder type
+        let responderIcon;
+        switch(responder.respondertype) {
+          case 'Medical Professional':
+            responderIcon = customIcons.Responder;
+            break;
+          case 'Police':
+            responderIcon = customIcons.Police;
+            break;
+          case 'Fire Fighter':
+            responderIcon = customIcons.Fire;
+            break;
+          default:
+            responderIcon = customIcons.Responder; // fallback icon
+        }
+
+        return (
+          <Marker 
+            key={`responder-${index}`} 
+            position={[responder.latitude, responder.longitude]} 
+            icon={responderIcon}
+          >
+            <Popup>
+              <div>
+                <p>Responder: {responder.respondertype}</p>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
       {activeBarangays.map((barangay, index) => (
         <Marker key={`barangay-${index}`} position={[barangay.latitude, barangay.longitude]} icon={customIcons.Barangay}>
           <Popup>

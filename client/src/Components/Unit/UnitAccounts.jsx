@@ -19,7 +19,7 @@ const UnitDashboard = () => {
           <div className="home-wrapper"> 
           <button className="create-account" onClick={() => handleNavigation('/unit/check-accounts')}>Check Accounts</button>
           <button className="create-account"onClick={() => handleNavigation('/unit/add-responder')}>Add Responder</button>
-          <button className="create-account" onClick={() => handleNavigation('/unit/add-police')}>Add Police</button>
+          
           </div>
         </div>
       </section>

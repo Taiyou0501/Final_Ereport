@@ -51,10 +51,6 @@ const CheckAccounts = () => {
         unit_details: accounts.unit_details.filter(account =>
           account.username.toLowerCase().includes(lowercasedSearch) ||
           account.email.toLowerCase().includes(lowercasedSearch)
-        ),
-        police_details: accounts.police_details.filter(account =>
-          account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch)
         )
       };
       setFilteredAccounts(filtered);
@@ -96,34 +92,10 @@ const CheckAccounts = () => {
               className="search-bar"
             />
             <div className="account-section">
-              <strong>UNIT</strong>
-              <ul>
-                {filteredAccounts.unit_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('unit_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="account-section">
               <strong>RESPONDER</strong>
               <ul>
                 {filteredAccounts.responder_details.map(account => (
                   <li key={account.id} onClick={() => handleAccountClick('responder_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="account-section">
-              <strong>POLICE</strong>
-              <ul>
-                {filteredAccounts.police_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('police_details', account.id)}>
                     <span>{account.id}</span>
                     <span>{account.username}</span>
                     <span>{account.email}</span>

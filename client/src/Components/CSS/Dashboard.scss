@@ -441,37 +441,67 @@ header .image-text .logo-title{
   display: block;
   font-size: 24px;
   margin-bottom: 10px;
+  padding-left: 20px;  /* Add left padding to align with the list items */
   color: var(--button-background);
 }
 
-.account-section ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
+/* Common styles for all list items */
 .account-section li {
-  padding: 10px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 50px 250px minmax(300px, 2fr);
+  gap: 80px;
+  padding: 10px 20px;
   align-items: center;
   transition: background-color 0.3s, transform 0.3s, border-bottom 0.3s;
 }
 
+/* Specific grid for user section */
+.account-section.user li {
+  grid-template-columns: 50px 250px minmax(300px, 2fr);
+  gap: 80px;
+}
+
+/* Specific grid for responder section */
+.account-section.responder li {
+  grid-template-columns: 50px 250px minmax(300px, 2fr) 200px 200px;
+  gap: 80px;
+}
+
+/* Specific grid for unit section */
+.account-section.unit li {
+  grid-template-columns: 50px 250px minmax(300px, 2fr);
+  gap: 80px;
+}
+
 .account-section li:hover {
-  background-color: var(--primary-color-light); /* Change background color on hover */
-  transform: scale(1.02); /* Slightly scale up on hover */
-  border-bottom: 1px solid var(--text-color); /* Show border-bottom on hover */
+  background-color: var(--primary-color-light);
+  transform: scale(1.02);
+  border-bottom: 1px solid var(--text-color);
+  cursor: pointer;
 }
 
 .account-section li span {
-  flex: 1;
-  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* First column (ID) specific styling */
 .account-section li span:first-child {
-  flex: 0.5;
+  justify-self: start;
+  padding-left: 10px;
 }
+
+/* Second column (username) specific styling */
+.account-section li span:nth-child(2) {
+  justify-self: start;
+}
+
+/* Third column (email) specific styling */
+.account-section li span:nth-child(3) {
+  justify-self: start;
+}
+
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -612,4 +642,75 @@ header .image-text .logo-title{
 
 .tabs-profile.editing-mode button:hover {
   background-color: #000000;
+}
+
+.inputbox select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid rgba(255, 255, 255, .5);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .1);
+  backdrop-filter: blur(50px);
+  font-size: 16px;
+  color: var(--background);
+  outline: none;
+  transition: 0.5s ease;
+
+  &:focus {
+    border-color: var(--primary-color);
+  }
+
+  option {
+    background: white;
+    color: var(--text-color);
+  }
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+}
+
+/* Add specific styles for barangay section */
+.account-section.barangay {
+  width: 100%;
+  margin-bottom: 50px;
+}
+
+.account-section.barangay li {
+  grid-template-columns: 50px 250px minmax(300px, 2fr) 200px;
+  gap: 80px;
+  padding: 10px 20px;
+  align-items: center;
+}
+
+/* Ensure all columns align properly */
+.account-section.barangay li span:nth-child(4) {
+  justify-self: start;
+}
+
+/* Make sure all sections follow the same pattern */
+.account-section {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.account-section strong {
+  display: block;
+  font-size: 24px;
+  margin-bottom: 10px;
+  padding-left: 20px;
+  color: var(--button-background);
+}
+
+.account-section li {
+  display: grid;
+  padding: 10px 20px;
+  align-items: center;
+  transition: background-color 0.3s, transform 0.3s, border-bottom 0.3s;
+}
+
+.account-section li span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

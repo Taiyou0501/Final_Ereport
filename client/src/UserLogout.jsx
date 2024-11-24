@@ -27,13 +27,31 @@ const Logout = () => {
   }, []);
 
   const handleLogout = () => {
-    axios.post('http://localhost:8081/logout', {}, { withCredentials: true })
+    // First check the current session to get user details
+    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
+      .then(response => {
+        const userRole = response.data.user.role;
+        
+        if (userRole === 'RESPONDER' || userRole === 'BARANGAY') {
+          // First update the situation to unavailable
+          return axios.put('http://localhost:8081/api/account/status', {
+            status: 'unavailable',
+            latitude: 0,
+            longitude: 0
+          }, { withCredentials: true });
+        }
+        return Promise.resolve();
+      })
+      .then(() => {
+        // Then proceed with logout
+        return axios.post('http://localhost:8081/logout', {}, { withCredentials: true });
+      })
       .then(() => {
         logout(); // Clear the authentication state
         navigate('/login'); // Redirect to login page
       })
       .catch(err => {
-        console.error('Error logging out', err);
+        console.error('Error during logout process', err);
       });
   };
 

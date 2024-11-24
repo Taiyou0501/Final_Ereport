@@ -57,13 +57,10 @@ const AdminCheckAccount = () => {
           account.username.toLowerCase().includes(lowercasedSearch) ||
           account.email.toLowerCase().includes(lowercasedSearch)
         ),
-        police_details: accounts.police_details.filter(account =>
-          account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch)
-        ),
         barangay_details: accounts.barangay_details.filter(account =>
           account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch)
+          account.email.toLowerCase().includes(lowercasedSearch) ||
+          account.barangay?.toLowerCase().includes(lowercasedSearch)
         )
       };
       setFilteredAccounts(filtered);
@@ -154,7 +151,7 @@ const AdminCheckAccount = () => {
               onChange={(e) => setSearch(e.target.value)}
               className="search-bar"
             />
-            <div className="account-section">
+            <div className="account-section user">
               <strong>USER</strong>
               <ul>
                 {filteredAccounts.user_details.map(account => (
@@ -166,7 +163,7 @@ const AdminCheckAccount = () => {
                 ))}
               </ul>
             </div>
-            <div className="account-section">
+            <div className="account-section responder">
               <strong>RESPONDER</strong>
               <ul>
                 {filteredAccounts.responder_details.map(account => (
@@ -174,11 +171,13 @@ const AdminCheckAccount = () => {
                     <span>{account.id}</span>
                     <span>{account.username}</span>
                     <span>{account.email}</span>
+                    <span>{account.respondertype}</span>
+                    <span>{account.vehicle}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="account-section">
+            <div className="account-section unit">
               <strong>UNIT</strong>
               <ul>
                 {filteredAccounts.unit_details.map(account => (
@@ -190,19 +189,7 @@ const AdminCheckAccount = () => {
                 ))}
               </ul>
             </div>
-            <div className="account-section">
-              <strong>POLICE</strong>
-              <ul>
-                {filteredAccounts.police_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('police_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="account-section">
+            <div className="account-section barangay">
               <strong>BARANGAY</strong>
               <ul>
                 {filteredAccounts.barangay_details.map(account => (
@@ -210,6 +197,7 @@ const AdminCheckAccount = () => {
                     <span>{account.id}</span>
                     <span>{account.username}</span>
                     <span>{account.email}</span>
+                    <span>{account.barangay}</span>
                   </li>
                 ))}
               </ul>
@@ -230,9 +218,20 @@ const AdminCheckAccount = () => {
           <div className="modal-popup" onClick={(e) => e.stopPropagation()}>
             <h3>Account Details</h3>
             <p>ID: {selectedAccount.id}</p>
+            <p>First Name: {selectedAccount.firstname}</p>
+            <p>Last Name: {selectedAccount.lastname}</p>
             <p>Username: {selectedAccount.username}</p>
             <p>Email: {selectedAccount.email}</p>
-            {/* Add more account details here */}
+            <p>Phone Number: {selectedAccount.cpnumber}</p>
+            {selectedAccount.respondertype && (
+              <p>Responder Type: {selectedAccount.respondertype}</p>
+            )}
+            {selectedAccount.vehicle && (
+              <p>Vehicle: {selectedAccount.vehicle}</p>
+            )}
+            {selectedAccount.barangay && (
+              <p>Barangay: {selectedAccount.barangay}</p>
+            )}
             <button onClick={handleCloseModal}>Close</button>
           </div>
         </div>

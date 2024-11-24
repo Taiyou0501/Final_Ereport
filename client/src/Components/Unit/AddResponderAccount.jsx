@@ -60,11 +60,34 @@ const UnitDashboard = () => {
                     <input type="lastname" placeholder="Last Name" name='lastname' required onChange={handleChange}/>
                   </div>
                 </div>
-                <div className="inputbox">
-                  <input type="responder-type" placeholder="Responder Type" name='respondertype' required onChange={handleChange}/>
-                </div>
-                <div className="inputbox">
-                  <input type="vehicle" placeholder="Vehicle" name='vehicle' required onChange={handleChange}/>
+                <div className="two-forms">
+                  <div className="inputbox">
+                    <select 
+                      name='respondertype' 
+                      required 
+                      onChange={handleChange}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select Responder Type</option>
+                      <option value="Medical Professional">Medical Professional</option>
+                      <option value="Police">Police</option>
+                      <option value="Fire Fighter">Fire Fighter</option>
+                    </select>
+                  </div>
+                  <div className="inputbox">
+                    <select 
+                      name='vehicle' 
+                      required 
+                      onChange={handleChange}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select Vehicle Type</option>
+                      <option value="Ambulance">Ambulance</option>
+                      <option value="Fire Truck">Fire Truck</option>
+                      <option value="Rescue Vehicle">Rescue Vehicle</option>
+                      <option value="Police Car">Police Car</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="inputbox">
                     <input type="email" placeholder="Email" name='email' required onChange={handleChange}/>

@@ -23,6 +23,7 @@ const UserIndex = () => {
   const [closestBarangayId, setClosestBarangayId] = useState(''); // State for closest barangay ID
   const [victimName, setVictimName] = useState(''); // State for victim name
   const [reporterId, setReporterId] = useState(''); // State for reporter ID
+  const [closestPoliceId, setClosestPoliceId] = useState(''); // Add this state variable
 
   // Function to calculate distance between two coordinates using Haversine formula
   const calculateDistance = (loc1, loc2) => {
@@ -158,14 +159,50 @@ const UserIndex = () => {
   
         let minDistance = Infinity;
         for (const barangayNode in distances) {
-          if (barangayNode !== incidentNode && distances[barangayNode] < minDistance) {
+          if (barangayNode !== incidentNode && distances[barangayNode] < minDistance && distances[barangayNode] <= 3) {
             minDistance = distances[barangayNode];
             closestBarangay = barangayNode;
           }
         }
   
         console.log('Closest barangay:', closestBarangay);
+      } else {
+        closestBarangay = 'No barangay available';
       }
+  
+      const policeResponse = await axios.get('http://localhost:8081/api/responders/active', {
+        params: { respondertype: 'Police' }
+      });
+      const policeResponders = policeResponse.data;
+  
+      let closestPolice = 'No police available';
+      if (policeResponders.length > 0) {
+        const graph = {};
+        const incidentNode = 'incident';
+        graph[incidentNode] = {};
+  
+        policeResponders.forEach(responder => {
+          const responderNode = `responder_${responder.id}`;
+          graph[responderNode] = {};
+          const distance = calculateDistance(
+            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+            { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
+          );
+          graph[incidentNode][responderNode] = distance;
+          graph[responderNode][incidentNode] = distance;
+        });
+  
+        const distances = dijkstra(graph, incidentNode);
+        let minDistance = Infinity;
+        for (const policeNode in distances) {
+          if (policeNode !== incidentNode && distances[policeNode] < minDistance && distances[policeNode] <= 3) {
+            minDistance = distances[policeNode];
+            closestPolice = policeNode;
+          }
+        }
+      }
+  
+      setClosestPoliceId(closestPolice);
   
       setClosestResponderId(closestResponder);
       setClosestBarangayId(closestBarangay);
@@ -189,7 +226,8 @@ const UserIndex = () => {
         imageUrl: filePath,
         status: 'active',
         closestResponderId: closestResponder,
-        closestBarangayId: closestBarangay
+        closestBarangayId: closestBarangay,
+        closestPoliceId: closestPolice
       };
   
       console.log('Full report data before sending:', fullReportData);
@@ -336,6 +374,7 @@ const UserIndex = () => {
               {hasSaved && (
                 <>
                   <p className="d6">Closest Responder ID: {closestResponderId}</p>
+                  <p className="d6">Closest Police ID: {closestPoliceId}</p>
                   <p className="d6">Closest Barangay ID: {closestBarangayId}</p>
                 </>
               )}

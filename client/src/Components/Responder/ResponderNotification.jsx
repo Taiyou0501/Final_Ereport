@@ -103,37 +103,58 @@ const Dashboard = () => {
         console.log('Button Clicked:', buttonClicked);
         startCheckingDistance();
 
-        // Calculate ETA based on distance
         if (distance) {
-            const averageSpeed = 60; // km/h
-            const etaMinutes = (distance / averageSpeed) * 60; // ETA in minutes
-            const roundedEta = Math.ceil(etaMinutes); // Round up to the nearest whole number
+            const averageSpeed = 60;
+            const etaMinutes = (distance / averageSpeed) * 60;
+            const roundedEta = Math.ceil(etaMinutes);
             setEta(roundedEta);
 
-            // Update the report with the ETA
             try {
-                const response = await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: 'waiting for responder', eta: roundedEta }),
+                const sessionResponse = await fetch('http://localhost:8081/checkSession', {
                     credentials: 'include'
                 });
-                const data = await response.json();
-                if (response.ok) {
-                    console.log('ETA updated:', data.message);
-                } else {
-                    console.error('Error updating ETA:', data.message);
+                const sessionData = await sessionResponse.json();
+                
+                // Get responder type from responder_details
+                const responderResponse = await fetch('http://localhost:8081/api/responder/type', {
+                    credentials: 'include'
+                });
+                const responderData = await responderResponse.json();
+                const isPolice = responderData.respondertype === 'Police';
+                const responderId = responderData.id;
+
+                if (!isPolice && reportDetails.closestResponderId && reportDetails.closestResponderId !== "No responder available") {
+                    await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            status: 'waiting for responder', 
+                            eta: roundedEta 
+                        }),
+                        credentials: 'include'
+                    });
+                } else if (isPolice && reportDetails.closestPoliceId === `responder_${responderId}`) {
+                    await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/policeStatus`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            closestPoliceId: `responder_${responderId} (RESPONDING)`
+                        }),
+                        credentials: 'include'
+                    });
                 }
             } catch (error) {
-                console.error('Error updating ETA:', error);
+                console.error('Error updating status:', error);
             }
         }
     };
 
     const startCheckingDistance = () => {
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
@@ -153,23 +174,40 @@ const Dashboard = () => {
                                 clearInterval(intervalRef.current);
 
                                 try {
-                                    const response = await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/status`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({ status: 'Responded' }),
+                                    const responderResponse = await fetch('http://localhost:8081/api/responder/type', {
                                         credentials: 'include'
                                     });
-                                    const data = await response.json();
-                                    if (response.ok) {
-                                        console.log(data.message);
-                                        navigate('/responder/final');
-                                    } else {
-                                        console.error('Error updating report status:', data.message);
+                                    const responderData = await responderResponse.json();
+                                    const isPolice = responderData.respondertype === 'Police';
+                                    const responderId = responderData.id;
+
+                                    if (!isPolice && reportDetails.closestResponderId && reportDetails.closestResponderId !== "No responder available") {
+                                        await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/status`, {
+                                            method: 'PUT',
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify({ 
+                                                status: 'Responded',
+                                                responderId: responderId 
+                                            }),
+                                            credentials: 'include'
+                                        });
+                                    } else if (isPolice && reportDetails.closestPoliceId.includes(`responder_${responderId}`)) {
+                                        await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/policeStatus`, {
+                                            method: 'PUT',
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify({ 
+                                                closestPoliceId: `responder_${responderId} (RESPONDED)`
+                                            }),
+                                            credentials: 'include'
+                                        });
                                     }
+                                    navigate('/responder/final');
                                 } catch (error) {
-                                    console.error('Error updating report status:', error);
+                                    console.error('Error updating status:', error);
                                 }
                             }
                         }
@@ -179,7 +217,7 @@ const Dashboard = () => {
                     }
                 );
             }
-        }, 5000); // Check every 5 seconds
+        }, 5000);
     };
 
     useEffect(() => {

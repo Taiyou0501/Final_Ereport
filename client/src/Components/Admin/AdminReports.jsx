@@ -41,10 +41,16 @@ const AdminReports = () => {
 
   const handleStatusChange = async (reportId) => {
     try {
-      await axios.put(`http://localhost:8081/api/reports/${reportId}/status`, { status: 'Responded' });
-      setReports(reports.map(report => report.id === reportId ? { ...report, status: 'Responded' } : report));
+      await axios.put(`http://localhost:8081/api/full_report/${reportId}/status`, { 
+        status: 'Responded Manually'
+      });
+      
+      setReports(reports.map(report => 
+        report.id === reportId ? { ...report, status: 'Responded Manually' } : report
+      ));
+      
       if (selectedReport && selectedReport.id === reportId) {
-        setSelectedReport({ ...selectedReport, status: 'Responded' });
+        setSelectedReport({ ...selectedReport, status: 'Responded Manually' });
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -131,8 +137,14 @@ const AdminReports = () => {
                 <p><strong>Coordinates:</strong> Latitude: {selectedReport.latitude}, Longitude: {selectedReport.longitude}</p>
                 <p><strong>Date/Time:</strong> {formatDate(selectedReport.uploadedAt)}</p>
                 <p><strong>Status:</strong> {selectedReport.status}</p>
-                {selectedReport.status !== 'Responded' && (
-                  <button className="btn-responded" onClick={() => handleStatusChange(selectedReport.id)}>Mark as Responded</button>
+                {selectedReport.status !== 'Responded Manually' && 
+                 !selectedReport.status.startsWith('Responded by') && (
+                  <button 
+                    className="btn-responded" 
+                    onClick={() => handleStatusChange(selectedReport.id)}
+                  >
+                    Mark as Responded
+                  </button>
                 )}
                 {selectedReport.imageUrl && (
                   <div>

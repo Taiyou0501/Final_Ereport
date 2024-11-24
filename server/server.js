@@ -562,14 +562,58 @@ app.get('/api/user-upload-id', (req, res) => {
 });
 
 app.post('/api/full_report', (req, res) => {
-  const { victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId, closestBarangayId } = req.body;
+  const { 
+    victim, 
+    reporterId, 
+    type, 
+    latitude, 
+    longitude, 
+    location, 
+    description, 
+    uploadedAt, 
+    imageUrl, 
+    status, 
+    closestResponderId, 
+    closestBarangayId,
+    closestPoliceId 
+  } = req.body;
   
-  console.log('Received full report data:', req.body); // Log the received data
+  console.log('Received full report data:', req.body);
 
-  const sql = 'INSERT INTO full_report (victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId, closestBarangayId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  db.query(sql, [victim, reporterId, type, latitude, longitude, location, description, uploadedAt, imageUrl, status, closestResponderId, closestBarangayId], (err, result) => {
+  const sql = `
+    INSERT INTO full_report (
+      victim, 
+      reporterId, 
+      type, 
+      latitude, 
+      longitude, 
+      location, 
+      description, 
+      uploadedAt, 
+      imageUrl, 
+      status, 
+      closestResponderId, 
+      closestBarangayId,
+      closestPoliceId
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  db.query(sql, [
+    victim, 
+    reporterId, 
+    type, 
+    latitude, 
+    longitude, 
+    location, 
+    description, 
+    uploadedAt, 
+    imageUrl, 
+    status, 
+    closestResponderId, 
+    closestBarangayId,
+    closestPoliceId 
+  ], (err, result) => {
     if (err) {
-      console.error('Error inserting full report:', err); // Log the error
+      console.error('Error inserting full report:', err);
       return res.status(500).json({ message: 'Error inserting full report' });
     }
     res.status(200).json({ message: 'Full report added successfully' });
@@ -657,17 +701,22 @@ app.get('/checkSession', (req, res) => {
 
 
 
-app.put('/api/reports/:id/status', (req, res) => {
+app.put('/api/full_report/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
-  const sql = 'UPDATE full_report SET status = ? WHERE id = ?';
+  const { status, eta, barangay_eta, responderId } = req.body;
 
-  db.query(sql, [status, id], (err, result) => {
+  let finalStatus = status;
+  if (status === 'Responded' && responderId) {
+    finalStatus = `Responded by responder_${responderId}`;
+  }
+
+  const sql = 'UPDATE full_report SET status = ?, eta = ?, barangay_eta = ? WHERE id = ?';
+  db.query(sql, [finalStatus, eta, barangay_eta, id], (err, result) => {
     if (err) {
       console.error('Error updating report status:', err);
       return res.status(500).json({ message: 'Error updating report status' });
     }
-    res.status(200).json({ message: 'Report status updated successfully' });
+    res.status(200).json({ message: 'Report status and ETA updated successfully' });
   });
 });
 
@@ -786,22 +835,26 @@ app.put('/api/responders/:id/situation', (req, res) => {
 app.get('/api/responder/report', (req, res) => {
   const { user } = req.session;
 
-  if (!user || user.table !== 'responder_details') {
+  if (!user || (user.table !== 'responder_details' && user.table !== 'police_details')) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  const sql = `SELECT reportId FROM responder_details WHERE username = ?`;
+  const sql = `SELECT reportId FROM ${user.table} WHERE username = ?`;
   db.query(sql, [user.username], (err, results) => {
     if (err) {
-      console.error('Error fetching responder reportId:', err);
-      return res.status(500).json({ message: 'Error fetching responder reportId' });
+      console.error('Error fetching reportId:', err);
+      return res.status(500).json({ message: 'Error fetching reportId' });
     }
     if (results.length === 0 || !results[0].reportId) {
       return res.status(404).json({ message: 'No report found for this responder' });
     }
 
     const reportId = results[0].reportId;
-    const reportSql = `SELECT id, type, latitude, longitude, victim, reporterId, location, description, uploadedAt, imageUrl FROM full_report WHERE id = ?`;
+    const reportSql = `
+      SELECT id, type, latitude, longitude, victim, reporterId, location, 
+             description, uploadedAt, imageUrl, closestPoliceId, closestResponderId 
+      FROM full_report WHERE id = ?`;
+    
     db.query(reportSql, [reportId], (err, reportResults) => {
       if (err) {
         console.error('Error fetching report details:', err);
@@ -839,10 +892,15 @@ app.put('/api/responder/resetReport', (req, res) => {
 
 app.put('/api/full_report/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status, eta, barangay_eta } = req.body;
+  const { status, eta, barangay_eta, responderId } = req.body;
+
+  let finalStatus = status;
+  if (status === 'Responded' && responderId) {
+    finalStatus = `Responded by responder_${responderId}`;
+  }
 
   const sql = 'UPDATE full_report SET status = ?, eta = ?, barangay_eta = ? WHERE id = ?';
-  db.query(sql, [status, eta, barangay_eta, id], (err, result) => {
+  db.query(sql, [finalStatus, eta, barangay_eta, id], (err, result) => {
     if (err) {
       console.error('Error updating report status:', err);
       return res.status(500).json({ message: 'Error updating report status' });
@@ -1068,6 +1126,77 @@ app.get('/api/active-barangays', (req, res) => {
     }
     res.status(200).json(results);
   });
+});
+
+app.post('/api/full_reports/closestPolice', (req, res) => {
+  const { policeId } = req.body;
+  const closestPoliceId = `responder_${policeId}`;
+  const sql = 'SELECT id FROM full_report WHERE closestPoliceId = ? AND status = "active"';
+
+  db.query(sql, [closestPoliceId], (err, results) => {
+    if (err) {
+      console.error('Error fetching reports:', err);
+      return res.status(500).json({ message: 'Error fetching reports' });
+    }
+    if (results.length > 0) {
+      return res.status(200).json({ match: true, reportId: results[0].id });
+    }
+    res.status(200).json({ match: false });
+  });
+});
+
+app.put('/api/full_report/:id/policeStatus', (req, res) => {
+    const { id } = req.params;
+    const { closestPoliceId } = req.body;
+    
+    console.log('Updating police status:', { id, closestPoliceId });
+    
+    const sql = 'UPDATE full_report SET closestPoliceId = ? WHERE id = ?';
+    db.query(sql, [closestPoliceId, id], (err, result) => {
+        if (err) {
+            console.error('Error updating police status:', err);
+            return res.status(500).json({ message: 'Error updating police status' });
+        }
+        console.log('Police status updated successfully');
+        res.status(200).json({ message: 'Police status updated successfully' });
+    });
+});
+
+app.get('/api/responder/type', (req, res) => {
+    const { user } = req.session;
+    
+    if (!user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const sql = 'SELECT id, respondertype FROM responder_details WHERE username = ?';
+    db.query(sql, [user.username], (err, results) => {
+        if (err) {
+            console.error('Error fetching responder type:', err);
+            return res.status(500).json({ message: 'Error fetching responder type' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Responder not found' });
+        }
+        res.status(200).json(results[0]);
+    });
+});
+
+app.put('/api/full_report/:id/barangayStatus', (req, res) => {
+    const { id } = req.params;
+    const { closestBarangayId, barangay_eta } = req.body;
+    
+    console.log('Updating barangay status:', { id, closestBarangayId, barangay_eta });
+    
+    const sql = 'UPDATE full_report SET closestBarangayId = ?, barangay_eta = ? WHERE id = ?';
+    db.query(sql, [closestBarangayId, barangay_eta, id], (err, result) => {
+        if (err) {
+            console.error('Error updating barangay status:', err);
+            return res.status(500).json({ message: 'Error updating barangay status' });
+        }
+        console.log('Barangay status updated successfully');
+        res.status(200).json({ message: 'Barangay status updated successfully' });
+    });
 });
 
 app.listen(8081, () => {

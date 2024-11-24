@@ -8,7 +8,7 @@ import ambulanceIcon from '../Assets/responder.png';
 import fireIcon from '../Assets/fire1.png';
 import injuredIcon from '../Assets/injured1.png';
 import vehicularIcon from '../Assets/car crash.png';
-import policeIcon from '../Assets/Police1.png'; 
+import policeIcon from '../Assets/police station.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
 import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
 
@@ -22,6 +22,35 @@ L.Icon.Default.mergeOptions({
 const LocationMarker = ({ setCurrentLocation }) => {
     const [reportLocations, setReportLocations] = useState([]);
     const [currentLocation, setLocalCurrentLocation] = useState(null);
+    const [responderType, setResponderType] = useState(null);
+
+    useEffect(() => {
+        // Fetch the responder type from session
+        fetch('http://localhost:8081/checkSession', {
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.isAuthenticated) {
+                setResponderType(data.user.respondertype);
+            }
+        })
+        .catch(error => console.error('Error fetching session:', error));
+    }, []);
+
+    // Get the appropriate icon based on responder type
+    const getResponderIcon = () => {
+        switch(responderType) {
+            case 'Medical Professional':
+                return customIcons.Responder;
+            case 'Police':
+                return customIcons.Police;
+            case 'Fire Fighter':
+                return customIcons.Fire;
+            default:
+                return customIcons.Responder;
+        }
+    };
 
     useEffect(() => {
         fetch('http://localhost:8081/api/full_reports/locations')
@@ -77,13 +106,14 @@ const LocationMarker = ({ setCurrentLocation }) => {
                             <div>
                                 <p>{location.type}</p>
                                 {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '100px', height: '100px' }} />}
+                                <p>status: {location.status}</p>
                             </div>
                         </Popup>
                     </Marker>
                 );
             })}
             {currentLocation && (
-                <Marker position={currentLocation} icon={customIcons.Responder}>
+                <Marker position={currentLocation} icon={getResponderIcon()}>
                     <Popup>You are here</Popup>
                 </Marker>
             )}
@@ -176,7 +206,7 @@ const Dashboard = () => {
                 if (currentLocation) {
                     updateStatus('active', currentLocation.lat, currentLocation.lng);
                 }
-            }, 20000); // Update location every 20 seconds
+            }, 10000); // Update location every 10 seconds
         }
         return () => clearInterval(interval);
     }, [isActive, currentLocation]);
@@ -202,6 +232,7 @@ const Dashboard = () => {
         let interval;
         if (isActive && responderId) {
             interval = setInterval(() => {
+                // First check for regular responder reports
                 fetch('http://localhost:8081/api/full_reports/closestResponder', {
                     method: 'POST',
                     headers: {
@@ -213,41 +244,59 @@ const Dashboard = () => {
                 .then(response => response.json())
                 .then(data => {
                     if (data.match) {
-                        setShowModal(true);
-                        // Update the responder situation to 'ongoing' and save the reportId
-                        fetch(`http://localhost:8081/api/responders/${responderId}/situation`, {
-                            method: 'PUT',
+                        handleReportMatch(data.reportId);
+                    } else {
+                        // If no regular report, check for police reports
+                        return fetch('http://localhost:8081/api/full_reports/closestPolice', {
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ situation: 'ongoing' }),
+                            body: JSON.stringify({ policeId: responderId }),
                             credentials: 'include',
-                        })
-                        .then(response => response.json())
-                        .then(() => {
-                            // Save the reportId to the responder_details
-                            fetch(`http://localhost:8081/api/responders/${responderId}/report`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ reportId: data.reportId }),
-                                credentials: 'include',
-                            })
-                            .then(response => response.json())
-                            .then(() => {
-                                navigate('/responder/report-received');
-                            })
-                            .catch(error => console.error('Error updating responder reportId:', error));
-                        })
-                        .catch(error => console.error('Error updating responder situation:', error));
+                        });
+                    }
+                })
+                .then(response => response?.json())
+                .then(data => {
+                    if (data?.match) {
+                        handleReportMatch(data.reportId);
                     }
                 })
                 .catch(error => console.error('Error checking for reports:', error));
-            }, 5000); // Check every 5 seconds
+            }, 5000);
         }
         return () => clearInterval(interval);
     }, [isActive, responderId, navigate]);
+
+    const handleReportMatch = async (reportId) => {
+        setShowModal(true);
+        try {
+            // Update the responder situation to 'ongoing'
+            await fetch(`http://localhost:8081/api/responders/${responderId}/situation`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ situation: 'ongoing' }),
+                credentials: 'include',
+            });
+
+            // Save the reportId to the responder_details
+            await fetch(`http://localhost:8081/api/responders/${responderId}/report`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reportId }),
+                credentials: 'include',
+            });
+
+            navigate('/responder/report-received');
+        } catch (error) {
+            console.error('Error handling report match:', error);
+        }
+    };
 
     return (
         <div className="index-responder-body">
