@@ -33,11 +33,21 @@ app.use(cors({
 app.use(express.json());
 
 const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE
+  host: env === 'production' 
+    ? process.env.MYSQL_ADDON_HOST 
+    : process.env.DB_HOST,
+  user: env === 'production' 
+    ? process.env.MYSQL_ADDON_USER 
+    : process.env.DB_USER,
+  password: env === 'production' 
+    ? process.env.MYSQL_ADDON_PASSWORD 
+    : process.env.DB_PASSWORD,
+  database: env === 'production' 
+    ? process.env.MYSQL_ADDON_DB 
+    : process.env.DB_DATABASE,
+  port: env === 'production' 
+    ? process.env.MYSQL_ADDON_PORT 
+    : process.env.DB_PORT
 });
 
 app.use(session({
@@ -65,11 +75,21 @@ const upload = multer({ storage });
 
 
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  port: process.env.DB_PORT
+  host: env === 'production' 
+    ? process.env.MYSQL_ADDON_HOST 
+    : process.env.DB_HOST,
+  user: env === 'production' 
+    ? process.env.MYSQL_ADDON_USER 
+    : process.env.DB_USER,
+  password: env === 'production' 
+    ? process.env.MYSQL_ADDON_PASSWORD 
+    : process.env.DB_PASSWORD,
+  database: env === 'production' 
+    ? process.env.MYSQL_ADDON_DB 
+    : process.env.DB_DATABASE,
+  port: env === 'production' 
+    ? process.env.MYSQL_ADDON_PORT 
+    : process.env.DB_PORT
 })
 
 app.post('/register', (req, res) => {
