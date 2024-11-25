@@ -1219,6 +1219,8 @@ app.put('/api/full_report/:id/barangayStatus', (req, res) => {
     });
 });
 
-app.listen(8081, () => {
-    console.log("Listening...")
+const port = process.env.PORT || 8081;
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`)
 } )
