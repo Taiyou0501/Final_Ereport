@@ -17,7 +17,8 @@ const app = express()
 const allowedOrigins = [
   'http://localhost:5173',
   'http://192.168.0.77:5173',
-  'https://ereport-4gl8.vercel.app' // Add your deployed client URL here
+  'https://last-ereport3.vercel.app',
+  // We'll add the frontend URL later when you deploy it
 ];
 
 app.use(cors({
@@ -1271,6 +1272,6 @@ app.put('/api/full_report/:id/setFakeReport', (req, res) => {
     });
 });
 
-app.listen(8081, () => {
-    console.log("Listening...")
-} )
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
