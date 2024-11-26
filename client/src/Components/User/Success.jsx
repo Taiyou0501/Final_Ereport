@@ -1,7 +1,7 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../config/axios';
 import moment from 'moment';
 import UserLogout from '../../UserLogout';
 
@@ -85,14 +85,9 @@ const UserIndex = () => {
 
   const pollForResponder = async (fullReportData, startTime) => {
     try {
-      let responderType = '';
-      if (report.type === 'Fire Emergency') {
-        responderType = 'Firefighter';
-      } else {
-        responderType = 'Medical Professional';
-      }
+      let responderType = report.type === 'Fire Emergency' ? 'Firefighter' : 'Medical Professional';
 
-      const respondersResponse = await axios.get('http://localhost:8081/api/responders/active', {
+      const respondersResponse = await api.get('/api/responders/active', {
         params: { respondertype: responderType }
       });
       const responders = respondersResponse.data;
@@ -130,7 +125,7 @@ const UserIndex = () => {
       if (foundResponder) {
         // Save report with found responder
         fullReportData.closestResponderId = foundResponder;
-        await axios.post('http://localhost:8081/api/full_report', fullReportData);
+        await api.post('/api/full_report', fullReportData);
         setClosestResponderId(foundResponder);
         setHasSaved(true);
         setNotification('Responder found and data saved successfully!');
@@ -138,7 +133,7 @@ const UserIndex = () => {
       } else if (elapsedTime >= 60000) { // 1 minute timeout
         // Save report with no responder available
         fullReportData.closestResponderId = 'No responder available';
-        await axios.post('http://localhost:8081/api/full_report', fullReportData);
+        await api.post('/api/full_report', fullReportData);
         setClosestResponderId('No responder available');
         setHasSaved(true);
         setNotification('No responder found within 1 minute. Data saved.');
@@ -167,7 +162,7 @@ const UserIndex = () => {
         responderType = 'Medical Professional';
       }
   
-      const respondersResponse = await axios.get('http://localhost:8081/api/responders/active', {
+      const respondersResponse = await api.get('/api/responders/active', {
         params: { respondertype: responderType }
       });
       const responders = respondersResponse.data;
@@ -208,7 +203,7 @@ const UserIndex = () => {
         closestResponder = 'No available Firefighter';
       }
   
-      const barangaysResponse = await axios.get('http://localhost:8081/api/barangays/active');
+      const barangaysResponse = await api.get('/api/barangays/active');
       const barangays = barangaysResponse.data;
   
       console.log('Active barangays:', barangays);
@@ -247,7 +242,7 @@ const UserIndex = () => {
         closestBarangay = 'No barangay available';
       }
   
-      const policeResponse = await axios.get('http://localhost:8081/api/responders/active', {
+      const policeResponse = await api.get('/api/responders/active', {
         params: { respondertype: 'Police' }
       });
       const policeResponders = policeResponse.data;
@@ -349,12 +344,8 @@ const UserIndex = () => {
   useEffect(() => {
     const fetchUploadId = async () => {
       try {
-        const response = await fetch('http://localhost:8081/api/user-upload-id', { credentials: 'include' });
-        if (!response.ok) {
-          throw new Error('Failed to fetch upload ID');
-        }
-        const data = await response.json();
-        setImageId(data.uploadId);
+        const response = await api.get('/api/user-upload-id');
+        setImageId(response.data.uploadId);
       } catch (error) {
         console.error('Error fetching upload ID:', error);
       }
@@ -367,23 +358,20 @@ const UserIndex = () => {
     const fetchImageDetails = async () => {
       if (imageId) {
         try {
-          const response = await fetch(`http://localhost:8081/images/${imageId}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch image details');
-          }
-          const data = await response.json();
-          setImageUrl(`http://localhost:8081/${data.filePath}`);
-          setFilePath(data.filePath); // Store the original filePath
+          const response = await api.get(`/images/${imageId}`);
+          const data = response.data;
+          setImageUrl(`${import.meta.env.VITE_API_URL}/${data.filePath}`);
+          setFilePath(data.filePath);
           setLatitude(data.latitude);
           setLongitude(data.longitude);
           const originalDate = moment(data.uploadedAt).format('M/D/YYYY, h:mm:ss A');
           setUploadedAt(originalDate);
-          setOriginalUploadedAt(originalDate); // Store the original uploadedAt
-          fetchPlaceName(data.latitude, data.longitude); // Fetch place name based on coordinates
+          setOriginalUploadedAt(originalDate);
+          fetchPlaceName(data.latitude, data.longitude);
         } catch (error) {
           console.error('Error fetching image details:', error);
         } finally {
-          setLoading(false); // Hide loading popup once data is fetched
+          setLoading(false);
         }
       }
     };
@@ -394,15 +382,15 @@ const UserIndex = () => {
   useEffect(() => {
     const fetchReportIdFromUserDetails = async () => {
       try {
-        const userDetailsResponse = await axios.get('http://localhost:8081/api/user_details', { withCredentials: true });
+        const userDetailsResponse = await api.get('/api/user_details');
         const reportId = userDetailsResponse.data.reportId;
 
         if (reportId) {
-          const reportResponse = await axios.get(`http://localhost:8081/api/reports/${reportId}`);
+          const reportResponse = await api.get(`/api/reports/${reportId}`);
           setReport(reportResponse.data);
-          setVictimName(reportResponse.data.victim_name); // Set the victim name from the report
-          setClosestResponderId(reportResponse.data.closestResponderId); // Set the closest responder ID from the report
-          setClosestBarangayId(reportResponse.data.closestBarangayId); // Set the closest barangay ID from the report
+          setVictimName(reportResponse.data.victim_name);
+          setClosestResponderId(reportResponse.data.closestResponderId);
+          setClosestBarangayId(reportResponse.data.closestBarangayId);
         }
       } catch (error) {
         console.error('Error fetching report ID from user details:', error);
@@ -415,8 +403,8 @@ const UserIndex = () => {
   useEffect(() => {
     const fetchSessionData = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/checkSession', { withCredentials: true });
-        console.log('Session data:', response.data); // Log the session data
+        const response = await api.get('/checkSession');
+        console.log('Session data:', response.data);
         setReporterId(`user_${response.data.user.id}`);
       } catch (error) {
         console.error('Error fetching session data:', error);

@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../config/axios';
 import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
-  const navigate = useNavigate(); // Initialize navigate for routing
-
+  const navigate = useNavigate();
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -17,16 +16,13 @@ const UserIndex = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          const response = await axios.post('http://localhost:8081/api/reports', {
+          const response = await api.post('/api/reports', {
             description: inputValue + ' vehicles involved',
             type: 'Vehicular Accident'
-          }, {
-            withCredentials: true // Include credentials in the request
           });
           console.log('Submitted:', inputValue);
           setSubmitted(true);
           setShowInput(false);
-          // Redirect to a different route, e.g., /submission-success
           navigate('/user/submission-success');
         } catch (error) {
           console.error('Error submitting report:', error);
@@ -37,27 +33,24 @@ const UserIndex = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    // Restrict input to numbers only using a regex
-    const value = e.target.value;
-    if (/^\d*$/.test(value)) {
-      setInputValue(value);
-    }
-  };
-
   const handleSkipClick = async () => {
     try {
-      const response = await axios.post('http://localhost:8081/api/reports', {
+      const response = await api.post('/api/reports', {
         description: 'Did not specify',
         type: 'Vehicular Accident'
-      }, {
-        withCredentials: true // Include credentials in the request
       });
       console.log('Submitted: Did not specify');
       setSubmitted(true);
       navigate('/user/submission-success');
     } catch (error) {
       console.error('Error submitting report:', error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value)) {
+      setInputValue(value);
     }
   };
 
