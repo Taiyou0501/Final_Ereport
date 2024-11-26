@@ -5,6 +5,7 @@ import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import Logout from '../../Logout';
+import api from '../../config/axios';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -17,11 +18,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch('http://localhost:8081/checkSession', {
-          method: 'GET',
-          credentials: 'include',
-        });
-        const data = await response.json();
+        const response = await api.get('/checkSession');
+        const data = response.data;
         if (data.isAuthenticated) {
           setUserDetails(data.user);
           setEditedDetails(data.user);
@@ -51,21 +49,13 @@ const AdminDashboard = () => {
 
   const handleSaveClick = async () => {
     try {
-      const response = await fetch('http://localhost:8081/updateAccount', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(editedDetails),
-      });
-      const data = await response.json();
-      if (response.ok) {
+      const response = await api.put('/updateAccount', editedDetails);
+      if (response.status === 200) {
         setUserDetails(editedDetails);
         setIsEditing(false);
         setErrorMessage('');
       } else {
-        setErrorMessage(data.message || 'Error updating account details');
+        setErrorMessage(response.data.message || 'Error updating account details');
       }
     } catch (error) {
       console.error('Error updating account details:', error);

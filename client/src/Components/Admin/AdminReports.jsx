@@ -7,6 +7,7 @@ import { faHouse, faFile, faUsers, faCircleUser } from '@fortawesome/free-solid-
 import axios from 'axios';
 import moment from 'moment';
 import Logout from '../../Logout';
+import api from '../../config/axios';
 
 const AdminReports = () => {
   const [reports, setReports] = useState([]);
@@ -17,7 +18,7 @@ const AdminReports = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/api/full_reports/all');
+        const response = await api.get('/api/full_reports/all');
         setReports(response.data);
       } catch (error) {
         console.error('Error fetching reports:', error);
@@ -41,7 +42,7 @@ const AdminReports = () => {
 
   const handleStatusChange = async (reportId) => {
     try {
-      await axios.put(`http://localhost:8081/api/full_report/${reportId}/status`, { 
+      await api.put(`/api/full_report/${reportId}/status`, { 
         status: 'Responded Manually'
       });
       

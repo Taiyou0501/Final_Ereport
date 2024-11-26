@@ -4,7 +4,7 @@ import '../CSS/Dashboard.css';
 import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
-import axios from 'axios';
+import api from '../../config/axios';
 import Logout from "../../Logout";
 
 const AddUnit = () => {
@@ -26,7 +26,7 @@ const AddUnit = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log(values);
-    axios.post('http://localhost:8081/a-add-unit', values)
+    api.post('/a-add-unit', values)
       .then(res => {
         console.log("Unit added successfully");
         alert("Unit added successfully");
