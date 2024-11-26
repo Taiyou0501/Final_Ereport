@@ -50,7 +50,9 @@ const db = mysql.createPool({
   port: env === 'production' 
     ? process.env.MYSQL_ADDON_PORT 
     : process.env.DB_PORT,
-  connectionLimit: 4
+  connectionLimit: 10,
+  queueLimit: 0,
+  waitForConnections: true
 });
 
 const sessionStore = new MySQLStore({
@@ -600,16 +602,25 @@ app.get('/api/user_details', (req, res) => {
 });
 app.get('/api/reports/:id', (req, res) => {
   const { id } = req.params;
-  const sql = 'SELECT * FROM reports WHERE id = ?';
-  db.query(sql, [id], (err, results) => {
+  
+  db.getConnection((err, connection) => {
     if (err) {
-      console.error('Error fetching report:', err);
-      return res.status(500).json({ message: 'Error fetching report' });
+      console.error('Error getting connection:', err);
+      return res.status(500).json({ message: 'Database connection error' });
     }
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'Report not found' });
-    }
-    res.status(200).json(results[0]);
+
+    const sql = 'SELECT * FROM reports WHERE id = ?';
+    connection.query(sql, [id], (err, results) => {
+      connection.release();
+      if (err) {
+        console.error('Error fetching report:', err);
+        return res.status(500).json({ message: 'Error fetching report' });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'Report not found' });
+      }
+      res.status(200).json(results[0]);
+    });
   });
 });
 
@@ -620,16 +631,24 @@ app.get('/api/user-upload-id', (req, res) => {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  const query = 'SELECT uploadId FROM user_details WHERE username = ?';
-  db.query(query, [user.username], (err, results) => {
+  db.getConnection((err, connection) => {
     if (err) {
-      console.error('Error fetching upload ID:', err);
-      return res.status(500).send('Error fetching upload ID');
+      console.error('Error getting connection:', err);
+      return res.status(500).json({ message: 'Database connection error' });
     }
-    if (results.length === 0) {
-      return res.status(404).send('User not found.');
-    }
-    res.status(200).json(results[0]);
+
+    const query = 'SELECT uploadId FROM user_details WHERE username = ?';
+    connection.query(query, [user.username], (err, results) => {
+      connection.release();
+      if (err) {
+        console.error('Error fetching upload ID:', err);
+        return res.status(500).send('Error fetching upload ID');
+      }
+      if (results.length === 0) {
+        return res.status(404).send('User not found.');
+      }
+      res.status(200).json(results[0]);
+    });
   });
 });
 
@@ -1438,20 +1457,28 @@ app.put('/api/full_report/:id/barangayStatus', (req, res) => {
 
 // Endpoint to update responder status and ETA
 app.put('/api/full_report/:id/responderStatus', (req, res) => {
-    const { id } = req.params;
-    const { closestResponderId, eta } = req.body;
-    
-    console.log('Updating responder status:', { id, closestResponderId, eta });
-    
+  const { id } = req.params;
+  const { closestResponderId, eta } = req.body;
+  
+  console.log('Updating responder status:', { id, closestResponderId, eta });
+  
+  db.getConnection((err, connection) => {
+    if (err) {
+      console.error('Error getting connection:', err);
+      return res.status(500).json({ message: 'Database connection error' });
+    }
+
     const sql = 'UPDATE full_report SET closestResponderId = ?, eta = ? WHERE id = ?';
-    db.query(sql, [closestResponderId, eta, id], (err, result) => {
-        if (err) {
-            console.error('Error updating responder status:', err);
-            return res.status(500).json({ message: 'Error updating responder status' });
-        }
-        console.log('Responder status updated successfully');
-        res.status(200).json({ message: 'Responder status updated successfully' });
+    connection.query(sql, [closestResponderId, eta, id], (err, result) => {
+      connection.release();
+      if (err) {
+        console.error('Error updating responder status:', err);
+        return res.status(500).json({ message: 'Error updating responder status' });
+      }
+      console.log('Responder status updated successfully');
+      res.status(200).json({ message: 'Responder status updated successfully' });
     });
+  });
 });
 
 // Endpoint to get active responders with their locations
