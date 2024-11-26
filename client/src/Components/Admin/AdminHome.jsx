@@ -15,6 +15,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Logout from '../../Logout';
+import api from '../../config/axios';  // Add this import at the top
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -41,31 +42,28 @@ const LocationMarker = () => {
   const [activeBarangays, setActiveBarangays] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:8081/api/full_reports/locations')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fetched report locations:', data); // Log the fetched data
-        setReportLocations(data);
+    api.get('/api/full_reports/locations')
+      .then(response => {
+        console.log('Fetched report locations:', response.data);
+        setReportLocations(response.data);
       })
       .catch(error => console.error('Error fetching report locations:', error));
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:8081/api/active-responders')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fetched active responders:', data); // Log the fetched data
-        setActiveResponders(data);
+    api.get('/api/active-responders')
+      .then(response => {
+        console.log('Fetched active responders:', response.data);
+        setActiveResponders(response.data);
       })
       .catch(error => console.error('Error fetching active responders:', error));
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:8081/api/active-barangays')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fetched active barangays:', data); // Log the fetched data
-        setActiveBarangays(data);
+    api.get('/api/active-barangays')
+      .then(response => {
+        console.log('Fetched active barangays:', response.data);
+        setActiveBarangays(response.data);
       })
       .catch(error => console.error('Error fetching active barangays:', error));
   }, []);
@@ -90,6 +88,9 @@ const LocationMarker = () => {
     Others: L.icon({  iconUrl: othersIcon, iconSize: [80, 80], iconAnchor: [20, 40] }) // Add the custom icon for Others
   };
 
+  // For image URLs in the Popup, use the base URL from axios config
+  const baseURL = api.defaults.baseURL;
+
   return (
     <>
       {reportLocations.map((location, index) => {
@@ -112,7 +113,7 @@ const LocationMarker = () => {
             <Popup>
               <div>
                 <p>{location.type}</p>
-                {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '190px', height: '150px' }} />}
+                {location.imageUrl && <img src={`${baseURL}/${location.imageUrl}`} alt={location.type} style={{ width: '190px', height: '150px' }} />}
                 {location.status && <p>Status: {location.status}</p>}
                 {location.closestResponderId && <p>Responder: {location.closestResponderId}</p>}
                 {location.closestBarangayId && <p>Barangay: {location.closestBarangayId}</p>}
