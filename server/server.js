@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 8081;
 const allowedOrigins = [
   'http://localhost:5173',
   'http://192.168.0.77:5173',
+  'https://last-ereport3.vercel.app',
   // We'll add the frontend URL later when you deploy it
 ];
 
