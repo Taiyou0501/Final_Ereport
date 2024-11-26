@@ -4,7 +4,7 @@ import '../CSS/Dashboard.css';
 import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
-import api from '../../config/axios';
+import axios from 'axios';
 import Logout from "../../Logout";
 
 const AddUnit = () => {
@@ -15,7 +15,7 @@ const AddUnit = () => {
     email: '',
     username: '',
     password: '',
-    cpnumber: ''
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -26,7 +26,7 @@ const AddUnit = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log(values);
-    api.post('/a-add-unit', values)
+    axios.post('http://localhost:8081/a-add-unit', values)
       .then(res => {
         console.log("Unit added successfully");
         alert("Unit added successfully");
@@ -118,7 +118,7 @@ const AddUnit = () => {
                     <input type="email" placeholder="Email" name='email' onChange={handleChange}/>
                 </div>
                 <div className="inputbox">
-                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/>
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                 {error && <p className="error-message">{error}</p>}

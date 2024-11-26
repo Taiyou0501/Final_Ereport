@@ -2,7 +2,6 @@ import '../CSS/responder.css';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import UserLogout from '../../UserLogout';
-import api from '../../config/axios';
 
 const DashboardFinal = () => {
     const navigate = useNavigate();
@@ -13,11 +12,14 @@ const DashboardFinal = () => {
     useEffect(() => {
         const fetchReportDetails = async () => {
             try {
-                const response = await api.get('/api/responder/report');
-                if (response.data) {
-                    setReportDetails(response.data);
+                const response = await fetch('http://localhost:8081/api/responder/report', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setReportDetails(data);
                 } else {
-                    console.error('Error fetching report details:', response.data.message);
+                    console.error('Error fetching report details:', data.message);
                 }
             } catch (error) {
                 console.error('Error fetching report details:', error);
@@ -54,13 +56,17 @@ const DashboardFinal = () => {
 
     const handleBackToMainMenu = async () => {
         try {
-            const response = await api.put('/api/responder/resetReport');
-            if (response.data) {
-                console.log(response.data.message);
+            const response = await fetch('http://localhost:8081/api/responder/resetReport', {
+                method: 'PUT',
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (response.ok) {
+                console.log(data.message);
                 localStorage.setItem('situationStatus', 'Unavailable');
                 navigate('/responder/home');
             } else {
-                console.error('Error resetting reportId:', response.data.message);
+                console.error('Error resetting reportId:', data.message);
             }
         } catch (error) {
             console.error('Error resetting reportId:', error);
@@ -110,11 +116,7 @@ const DashboardFinal = () => {
                         </div>
                         <div className="picture-container">
                             {reportDetails && reportDetails.imageUrl && (
-                                <img 
-                                    src={`${import.meta.env.VITE_API_URL}/${reportDetails.imageUrl}`} 
-                                    alt="Scene Photo" 
-                                    className="scene-picture" 
-                                />
+                                <img src={`http://localhost:8081/${reportDetails.imageUrl}`} alt="Scene Photo" className="scene-picture" />
                             )}
                         </div>
                     </div>

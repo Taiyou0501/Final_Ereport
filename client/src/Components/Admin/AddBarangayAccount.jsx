@@ -4,7 +4,7 @@ import '../CSS/Dashboard.css';
 import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
-import api from '../../config/axios';
+import axios from 'axios';
 import Logout from "../../Logout";
 
 const AdminDashboard = () => {
@@ -15,7 +15,7 @@ const AdminDashboard = () => {
     email: '',
     username: '',
     password: '',
-    cpnumber: ''
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -26,7 +26,7 @@ const AdminDashboard = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log(values);
-    api.post('/a-add-barangay', values)
+    axios.post('http://localhost:8081/a-add-barangay', values)
       .then(res => {
         console.log("Barangay added successfully");
         alert("Barangay added successfully");
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
                     <input type="email" placeholder="Email" name='email' onChange={handleChange} />
                 </div>
                 <div className="inputbox">
-                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/>
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                   {error && <p className="error">{error}</p>}

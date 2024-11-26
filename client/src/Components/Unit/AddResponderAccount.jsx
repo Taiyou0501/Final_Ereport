@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import '../CSS/Dashboard.css';
 import { useNavigate } from 'react-router-dom';
-import api from '../../config/axios';
+import axios from 'axios';
 import Sidebar from "./Sidebar";
 
 const UnitDashboard = () => {
@@ -14,7 +14,7 @@ const UnitDashboard = () => {
     password: '',
     vehicle: '',
     respondertype: '',
-    cpnumber: ''
+    cpnumber: '' // Add CP number here
   })
   const [error, setError] = useState('');
 
@@ -25,7 +25,7 @@ const UnitDashboard = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log(values);
-    api.post('/u-add-responder', values)
+    axios.post('http://localhost:8081/u-add-responder', values)
       .then(res => {
         console.log("Responder added successfully");
         alert("Responder added successfully");
@@ -93,7 +93,7 @@ const UnitDashboard = () => {
                     <input type="email" placeholder="Email" name='email' required onChange={handleChange}/>
                 </div>
                 <div className="inputbox">
-                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' required onChange={handleChange}/>
+                    <input type="cpnumber" placeholder="CP Number" name='cpnumber' required onChange={handleChange}/> {/* Add CP number input */}
                 </div>
                 <div className="inputbox">
                 {error && <p className="error-message">{error}</p>}

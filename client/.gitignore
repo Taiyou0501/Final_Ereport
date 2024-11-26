@@ -24,12 +24,3 @@ dist-ssr
 *.sw?
 
 .vercel
-
-# Environment Variables
-.env
-.env.local
-.env.development
-.env.production
-.env.development.local
-.env.test.local
-.env.production.local

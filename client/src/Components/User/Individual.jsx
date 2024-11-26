@@ -1,7 +1,7 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
-import api from '../../config/axios';
+import axios from 'axios';
 import UserLogout from '../../UserLogout';
 
 const Individual = () => {
@@ -14,9 +14,11 @@ const Individual = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          const response = await api.post('/api/reports', {
+          const response = await axios.post('http://localhost:8081/api/reports', {
             description: inputValue,
             type: 'Injured Individual'
+          }, {
+            withCredentials: true // Include credentials in the request
           });
           console.log('Submitted:', inputValue);
           setSubmitted(true);
@@ -33,9 +35,11 @@ const Individual = () => {
   
   const handleSkipClick = async () => {
     try {
-      const response = await api.post('/api/reports', {
+      const response = await axios.post('http://localhost:8081/api/reports', {
         description: 'Did not specify',
         type: 'Injured Individual'
+      }, {
+        withCredentials: true // Include credentials in the request
       });
       console.log('Submitted: Did not specify');
       setSubmitted(true);

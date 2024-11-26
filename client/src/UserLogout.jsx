@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import api from './config/axios';
 
 const Logout = () => {
   const { logout } = useAuth();
@@ -17,9 +17,9 @@ const Logout = () => {
   const [firstName, setFirstName] = useState('USER'); // State to store the first name
 
   useEffect(() => {
-    api.get('/checkSession')
+    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
       .then(response => {
-        setFirstName(response.data.user.firstname);
+        setFirstName(response.data.user.firstname); // Set the first name from the session data
       })
       .catch(err => {
         console.error('Error fetching session data', err);
@@ -28,27 +28,27 @@ const Logout = () => {
 
   const handleLogout = () => {
     // First check the current session to get user details
-    api.get('/checkSession')
+    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
       .then(response => {
         const userRole = response.data.user.role;
         
         if (userRole === 'RESPONDER' || userRole === 'BARANGAY') {
-          // Update the situation to unavailable
-          return api.put('/api/account/status', {
+          // First update the situation to unavailable
+          return axios.put('http://localhost:8081/api/account/status', {
             status: 'unavailable',
             latitude: 0,
             longitude: 0
-          });
+          }, { withCredentials: true });
         }
         return Promise.resolve();
       })
       .then(() => {
         // Then proceed with logout
-        return api.post('/logout');
+        return axios.post('http://localhost:8081/logout', {}, { withCredentials: true });
       })
       .then(() => {
-        logout();
-        navigate('/login');
+        logout(); // Clear the authentication state
+        navigate('/login'); // Redirect to login page
       })
       .catch(err => {
         console.error('Error during logout process', err);
@@ -56,7 +56,7 @@ const Logout = () => {
   };
 
   const handleProfileClick = () => {
-    api.get('/checkSession')
+    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
       .then(response => {
         setAccountDetails(response.data.user);
         setEditedDetails(response.data.user);
@@ -86,7 +86,7 @@ const Logout = () => {
   };
 
   const handleSaveClick = () => {
-    api.put('/updateAccount', editedDetails)
+    axios.put('http://localhost:8081/updateAccount', editedDetails, { withCredentials: true })
       .then(response => {
         setAccountDetails(editedDetails);
         setIsEditing(false);

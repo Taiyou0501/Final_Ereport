@@ -1,7 +1,7 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
-import api from '../../config/axios';
+import axios from 'axios';
 import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
@@ -15,9 +15,11 @@ const UserIndex = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          const response = await api.post('/api/reports', {
+          const response = await axios.post('http://localhost:8081/api/reports', {
             description: inputValue,
             type: 'Others'
+          }, {
+            withCredentials: true // Include credentials in the request
           });
           console.log('Submitted:', inputValue);
           setSubmitted(true);
