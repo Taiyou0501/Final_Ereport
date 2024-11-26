@@ -125,52 +125,52 @@ process.on('SIGINT', () => {
 app.post('/checkAllTables', (req, res) => {
   const { username, password } = req.body;
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
-  let found = false;
-
+  
   db.getConnection((err, connection) => {
     if (err) {
       console.error('Error getting connection:', err);
       return res.status(500).json({ message: 'Database connection error' });
     }
 
-    let completedQueries = 0;
-    let hasError = false;
-    
-    tables.forEach((table, index) => {
-      if (hasError) return;
+    // Use async/await to check tables sequentially
+    const checkTable = async (tableIndex) => {
+      if (tableIndex >= tables.length) {
+        connection.release();
+        return res.send({ message: "Invalid Credentials" });
+      }
 
+      const table = tables[tableIndex];
       const query = `SELECT * FROM ${table} WHERE username = ? AND password = ?`;
       
-      connection.query(query, [username, password], (err, results) => {
-        completedQueries++;
-        
-        if (err) {
-          hasError = true;
-          connection.release();
-          console.error(`Error querying table ${table}:`, err);
-          return res.status(500).json({ message: 'Database error' });
-        }
+      try {
+        const results = await new Promise((resolve, reject) => {
+          connection.query(query, [username, password], (err, results) => {
+            if (err) reject(err);
+            else resolve(results);
+          });
+        });
 
-        if (results.length > 0 && !found) {
-          found = true;
+        if (results.length > 0) {
+          // Found a match, set session and return immediately
           req.session.user = { username, table };
           req.session.save(err => {
-            if (err) {
-              console.error('Error saving session:', err);
-            }
+            if (err) console.error('Error saving session:', err);
           });
+          connection.release();
+          return res.send({ message: "Login Successful", table });
         }
 
-        if (completedQueries === tables.length) {
-          connection.release();
-          if (found) {
-            res.send({ message: "Login Successful", table });
-          } else {
-            res.send({ message: "Invalid Credentials" });
-          }
-        }
-      });
-    });
+        // No match in this table, check next table
+        return checkTable(tableIndex + 1);
+      } catch (error) {
+        connection.release();
+        console.error(`Error querying table ${table}:`, error);
+        return res.status(500).json({ message: 'Database error' });
+      }
+    };
+
+    // Start checking tables from index 0
+    checkTable(0);
   });
 });
 
