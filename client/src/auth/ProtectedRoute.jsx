@@ -1,13 +1,32 @@
 // src/auth/ProtectedRoute.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import api from '../config/axios';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [verified, setVerified] = useState(false);
   const location = useLocation();
 
-  if (isLoading) {
+  useEffect(() => {
+    const verifyAuth = async () => {
+      try {
+        const response = await api.get('/checkSession');
+        setVerified(response.data.isAuthenticated);
+      } catch (error) {
+        console.error('Verification error:', error);
+        setVerified(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyAuth();
+  }, []);
+
+  if (loading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -21,7 +40,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !verified) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

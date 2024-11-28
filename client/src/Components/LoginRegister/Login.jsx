@@ -10,25 +10,23 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await api.post('/checkAllTables', {
         username,
         password
       });
       
-      console.log('Login response:', response.data);
-      
       if (response.data.message === "Login Successful") {
         await login();
-        
         const table = response.data.table;
-        console.log('User type:', table);
-
+        
         let redirectPath;
         switch (table) {
           case 'user_details':
@@ -60,6 +58,8 @@ const Login = () => {
     } catch (error) {
       console.error('Login error:', error);
       setError(error.response?.data?.message || 'An error occurred during login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,6 +104,7 @@ const Login = () => {
             <div className="register-link-login">
               <p>Don't have an account? <Link to="/register">Create Account</Link></p>
             </div> 
+            {loading && <div>Logging in...</div>}
           </form>
         </div>
       </div>
