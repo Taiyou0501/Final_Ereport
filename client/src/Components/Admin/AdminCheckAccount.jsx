@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import '../CSS/Dashboard.css';
 import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faFile, faUsers, faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import api from '../../config/axios';
 import Logout from "../../Logout";
 
@@ -12,12 +12,14 @@ const AdminCheckAccount = () => {
     user_details: [],
     responder_details: [],
     unit_details: [],
+    police_details: [],
     barangay_details: []
   });
   const [filteredAccounts, setFilteredAccounts] = useState({
     user_details: [],
     responder_details: [],
     unit_details: [],
+    police_details: [],
     barangay_details: []
   });
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -30,12 +32,12 @@ const AdminCheckAccount = () => {
       try {
         setLoading(true);
         const response = await api.get('/api/accounts');
-        console.log('Accounts fetched:', response.data);
+        console.log('API Response:', response.data);
         setAccounts(response.data);
         setFilteredAccounts(response.data);
         setError('');
-      } catch (err) {
-        console.error('Error fetching accounts:', err);
+      } catch (error) {
+        console.error('Error fetching accounts:', error);
         setError('Failed to load accounts. Please try again later.');
       } finally {
         setLoading(false);
@@ -45,14 +47,42 @@ const AdminCheckAccount = () => {
     fetchAccounts();
   }, []);
 
+  useEffect(() => {
+    const filterAccounts = () => {
+      const lowercasedSearch = search.toLowerCase();
+      const filtered = {
+        user_details: accounts.user_details.filter(account =>
+          account.username.toLowerCase().includes(lowercasedSearch) ||
+          account.email.toLowerCase().includes(lowercasedSearch)
+        ),
+        responder_details: accounts.responder_details.filter(account =>
+          account.username.toLowerCase().includes(lowercasedSearch) ||
+          account.email.toLowerCase().includes(lowercasedSearch)
+        ),
+        unit_details: accounts.unit_details.filter(account =>
+          account.username.toLowerCase().includes(lowercasedSearch) ||
+          account.email.toLowerCase().includes(lowercasedSearch)
+        ),
+        barangay_details: accounts.barangay_details.filter(account =>
+          account.username.toLowerCase().includes(lowercasedSearch) ||
+          account.email.toLowerCase().includes(lowercasedSearch) ||
+          account.barangay?.toLowerCase().includes(lowercasedSearch)
+        )
+      };
+      setFilteredAccounts(filtered);
+    };
+
+    filterAccounts();
+  }, [search, accounts]);
+
   const handleAccountClick = async (table, id) => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await api.get(`/api/accounts/${table}/${id}`);
       setSelectedAccount(response.data);
       setError('');
-    } catch (err) {
-      console.error('Error fetching account details:', err);
+    } catch (error) {
+      console.error('Error fetching account details:', error);
       setError('Failed to load account details. Please try again.');
     } finally {
       setLoading(false);
@@ -122,7 +152,7 @@ const AdminCheckAccount = () => {
         <div className="tabs-admin">
           <div className="home-wrapper">
             <h2>List of Accounts</h2>
-            {error && <div className="error-message">{error}</div>}
+            {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
             <input
               type="text"
               placeholder="Search accounts..."
@@ -131,7 +161,7 @@ const AdminCheckAccount = () => {
               className="search-bar"
             />
             {loading && !selectedAccount ? (
-              <div className="loading">Loading accounts...</div>
+              <div className="loading-message">Loading accounts...</div>
             ) : (
               <>
                 <div className="account-section user">
@@ -191,6 +221,13 @@ const AdminCheckAccount = () => {
         </div>
       </section>
 
+      {loading && selectedAccount && (
+        <div className="loading-overlay">
+          <div className="loading-popup">
+            <p>Loading...</p>
+          </div>
+        </div>
+      )}
       {selectedAccount && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-popup" onClick={(e) => e.stopPropagation()}>
