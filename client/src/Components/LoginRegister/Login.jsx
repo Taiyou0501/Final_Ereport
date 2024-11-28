@@ -67,11 +67,11 @@ const Login = () => {
           }, 500);
         }
       } else {
-        setError('Invalid credentials');
+        alert('Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.response?.data?.message || 'An error occurred during login');
+      alert(error.response?.data?.message || 'An error occurred during login');
     }
   };
 
