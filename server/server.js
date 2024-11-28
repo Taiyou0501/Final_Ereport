@@ -698,56 +698,68 @@ app.get('/api/user-upload-id', (req, res) => {
 });
 
 app.post('/api/full_report', (req, res) => {
-  const reportData = req.body;
-  
-  // Log the incoming data
-  console.log('Received report data:', reportData);
-  
-  db.getConnection((err, connection) => {
-    if (err) {
-      console.error('Database connection error:', err);
-      return res.status(500).json({ message: 'Database connection error' });
-    }
+    const reportData = req.body;
+    
+    // Format data to match schema types
+    const formattedData = {
+        victim: String(reportData.victim || '[N/A]').substring(0, 255),
+        reporterId: String(reportData.reporterId).substring(0, 255),
+        type: String(reportData.type).substring(0, 255),
+        description: String(reportData.description || 'Did not specify').substring(0, 255),
+        location: String(reportData.location).substring(0, 255),
+        latitude: reportData.latitude ? parseFloat(reportData.latitude).toFixed(8) : null,
+        longitude: reportData.longitude ? parseFloat(reportData.longitude).toFixed(8) : null,
+        uploadedAt: new Date(reportData.uploadedAt).toISOString().slice(0, 19).replace('T', ' '),
+        imageUrl: String(reportData.imageUrl).substring(0, 255),
+        status: String(reportData.status || 'active').substring(0, 30),
+        closestResponderId: String(reportData.closestResponderId || '').substring(0, 50),
+        closestPoliceId: String(reportData.closestPoliceId || '').substring(0, 255),
+        closestBarangayId: String(reportData.closestBarangayId || '').substring(0, 50),
+        eta: reportData.eta ? parseInt(reportData.eta) : null,
+        barangay_eta: reportData.barangay_eta ? parseInt(reportData.barangay_eta) : null
+    };
 
     const sql = `INSERT INTO full_report (
-      victim, reporterId, type, latitude, longitude, location, 
-      description, uploadedAt, imageUrl, status, 
-      closestResponderId, closestBarangayId, closestPoliceId
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        victim, reporterId, type, description, location, 
+        latitude, longitude, uploadedAt, imageUrl, status,
+        closestResponderId, closestPoliceId, closestBarangayId,
+        eta, barangay_eta
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const values = [
-      reportData.victim,
-      reportData.reporterId,
-      reportData.type,
-      reportData.latitude,
-      reportData.longitude,
-      reportData.location,
-      reportData.description,
-      reportData.uploadedAt,
-      reportData.imageUrl,
-      reportData.status,
-      reportData.closestResponderId,
-      reportData.closestBarangayId,
-      reportData.closestPoliceId
+        formattedData.victim,
+        formattedData.reporterId,
+        formattedData.type,
+        formattedData.description,
+        formattedData.location,
+        formattedData.latitude,
+        formattedData.longitude,
+        formattedData.uploadedAt,
+        formattedData.imageUrl,
+        formattedData.status,
+        formattedData.closestResponderId,
+        formattedData.closestPoliceId,
+        formattedData.closestBarangayId,
+        formattedData.eta,
+        formattedData.barangay_eta
     ];
 
-    connection.query(sql, values, (err, result) => {
-      connection.release();
-      
-      if (err) {
-        console.error('Error inserting report:', err);
-        return res.status(500).json({ 
-          message: 'Error inserting full report',
-          error: err.message 
+    // Log formatted values for debugging
+    console.log('Formatted values:', values);
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ 
+                message: 'Error inserting full report',
+                error: err.message 
+            });
+        }
+        res.status(200).json({ 
+            message: 'Report saved successfully',
+            reportId: result.insertId 
         });
-      }
-      
-      res.status(200).json({ 
-        message: 'Report saved successfully',
-        reportId: result.insertId 
-      });
     });
-  });
 });
 
 app.get('/api/full_reports/all', (req, res) => {
