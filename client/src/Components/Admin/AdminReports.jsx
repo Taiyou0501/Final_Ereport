@@ -150,7 +150,7 @@ const AdminReports = () => {
                 {selectedReport.imageUrl && (
                   <div>
                     <img 
-                      src={`${api.defaults.baseURL}/${selectedReport.imageUrl}`} 
+                      src={`${api.defaults.baseURL}/upload/${selectedReport.imageUrl.split('upload/')[1]}`} 
                       alt="Report" 
                       className="small-image" 
                     />
