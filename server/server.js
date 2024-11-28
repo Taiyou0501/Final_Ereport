@@ -24,24 +24,15 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     console.log('Request origin:', origin);
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (
-      allowedOrigins.includes(origin) || 
-      origin.startsWith('https://last-ereport3-')
-    ) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('Origin not allowed:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['set-cookie']
 }));
 
 app.options('*', (req, res) => {
@@ -91,23 +82,23 @@ const db = mysql.createPool({
 
 const sessionStore = new MySQLStore({
   clearExpired: true,
-  checkExpirationInterval: 900000, // How frequently expired sessions will be cleared (milliseconds)
-  expiration: 86400000, // The maximum age of a valid session (milliseconds)
-  createDatabaseTable: true, // Whether or not to create the sessions database table
-  connectionLimit: 1, // Limit connections for session store
-}, db); // Pass the pool instance
+  checkExpirationInterval: 900000,
+  expiration: 86400000,
+  createDatabaseTable: true,
+}, db);
 
 app.use(session({
   key: 'session_cookie_name',
   secret: process.env.SESSION_SECRET,
   store: sessionStore,
-  resave: false,
+  resave: true,
   saveUninitialized: false,
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
-    httpOnly: true
+    maxAge: 1000 * 60 * 60 * 24,
+    httpOnly: true,
+    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
   }
 }));
 
@@ -165,67 +156,55 @@ process.on('SIGINT', () => {
 
 app.post('/checkAllTables', (req, res) => {
   const { username, password } = req.body;
-  console.log('Login attempt:', { username });
-  
-  const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
-  
-  db.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error getting connection:', err);
-      return res.status(500).json({ message: 'Database connection error' });
+  console.log('Login attempt for:', username);
+
+  const tables = ['user_details', 'admin_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
+  let currentTableIndex = 0;
+
+  function checkNextTable() {
+    if (currentTableIndex >= tables.length) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const checkTable = async (tableIndex) => {
-      if (tableIndex >= tables.length) {
-        connection.release();
-        return res.status(401).json({ message: "Invalid Credentials" });
+    const currentTable = tables[currentTableIndex];
+    const sql = `SELECT * FROM ${currentTable} WHERE username = ? AND password = ?`;
+
+    db.query(sql, [username, password], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ message: "Error checking credentials" });
       }
 
-      const table = tables[tableIndex];
-      const query = `SELECT * FROM ${table} WHERE username = ? AND password = ?`;
-      
-      try {
-        const results = await new Promise((resolve, reject) => {
-          connection.query(query, [username, password], (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
+      if (results.length > 0) {
+        // Set session data
+        req.session.user = {
+          id: results[0].id,
+          username: username,
+          table: currentTable
+        };
+
+        // Save session explicitly
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            return res.status(500).json({ message: "Session error" });
+          }
+
+          console.log('Session saved successfully:', req.session);
+          return res.json({
+            message: "Login Successful",
+            table: currentTable,
+            sessionId: req.sessionID
           });
         });
-
-        if (results.length > 0) {
-          req.session.user = { 
-            username, 
-            table,
-            id: results[0].id 
-          };
-          
-          req.session.save((err) => {
-            if (err) {
-              console.error('Session save error:', err);
-              connection.release();
-              return res.status(500).json({ message: 'Session error' });
-            }
-            
-            console.log('Session saved:', req.session);
-            connection.release();
-            return res.json({ 
-              message: "Login Successful", 
-              table,
-              user: results[0]
-            });
-          });
-        } else {
-          return checkTable(tableIndex + 1);
-        }
-      } catch (error) {
-        connection.release();
-        console.error(`Error querying table ${table}:`, error);
-        return res.status(500).json({ message: 'Database error' });
+      } else {
+        currentTableIndex++;
+        checkNextTable();
       }
-    };
+    });
+  }
 
-    checkTable(0);
-  });
+  checkNextTable();
 });
 
 app.post('/logout', (req, res) => {
@@ -1610,7 +1589,15 @@ app.put('/api/full_report/:id/setFakeReport', (req, res) => {
     });
 });
 
-
+app.get('/api/test-session', (req, res) => {
+  console.log('Test session route hit');
+  console.log('Session:', req.session);
+  res.json({ 
+    sessionExists: !!req.session,
+    sessionId: req.sessionID,
+    sessionData: req.session 
+  });
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
