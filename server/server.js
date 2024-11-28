@@ -368,15 +368,21 @@ app.post('/a-add-barangay', (req, res) => {
   const checkAllTables = (index) => {
     if (index >= tables.length) {
       if (!found) {
-        // Insert new barangay into the barangay_details table
-        const sql = "INSERT INTO barangay_details (`firstname`, `lastname`, `barangay`, `username`, `email`, `password`, `cpnumber`) VALUES (?)"; // Add cpnumber here
-        const values = [firstname, lastname, barangay, username, email, password, cpnumber]; // Add cpnumber here
         db.getConnection((err, connection) => {
-          if (err) return res.status(500).json({ message: 'Database connection error' });
-          
+          if (err) {
+            console.error('Database connection error:', err);
+            return res.status(500).json({ message: 'Database connection error' });
+          }
+
+          const sql = "INSERT INTO barangay_details (`firstname`, `lastname`, `barangay`, `username`, `email`, `password`, `cpnumber`) VALUES (?)";
+          const values = [firstname, lastname, barangay, username, email, password, cpnumber];
+
           connection.query(sql, [values], (err, data) => {
             connection.release();
-            if (err) return res.status(500).json(err);
+            if (err) {
+              console.error('Insert error:', err);
+              return res.status(500).json({ message: 'Error adding barangay account', error: err.message });
+            }
             return res.json({ message: 'Barangay added successfully' });
           });
         });

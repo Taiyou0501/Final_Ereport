@@ -26,13 +26,23 @@ const AddBarangay = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    
+    // Validate all fields are filled
+    const requiredFields = ['firstname', 'lastname', 'barangay', 'email', 'username', 'password', 'cpnumber'];
+    const emptyFields = requiredFields.filter(field => !values[field]);
+    
+    if (emptyFields.length > 0) {
+      setError(`Please fill in all required fields: ${emptyFields.join(', ')}`);
+      return;
+    }
+
     try {
       const response = await api.post('/a-add-barangay', values);
-      console.log("Barangay added successfully");
+      console.log("API Response:", response.data);
       alert("Barangay added successfully");
       navigate("/admin/accounts");
     } catch (err) {
-      console.error('Error adding barangay:', err);
+      console.error('Error details:', err.response?.data || err.message);
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
