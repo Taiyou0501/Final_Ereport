@@ -43,8 +43,13 @@ const Login = () => {
 
         const redirectPath = redirectPaths[table];
         if (redirectPath) {
-          console.log('Redirecting to:', redirectPath);
-          navigate(redirectPath, { replace: true });
+          console.log('Attempting to redirect to:', redirectPath);
+          try {
+            await navigate(redirectPath, { replace: true });
+            console.log('Redirect successful');
+          } catch (navError) {
+            console.error('Navigation error:', navError);
+          }
         } else {
           setError('Invalid user type');
           console.error('Unknown table type:', table);
