@@ -127,6 +127,7 @@ process.on('SIGINT', () => {
 
 app.post('/checkAllTables', (req, res) => {
   const { username, password } = req.body;
+  console.log('Login attempt:', { username, password });
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
   
   db.getConnection((err, connection) => {
@@ -160,6 +161,7 @@ app.post('/checkAllTables', (req, res) => {
             if (err) console.error('Error saving session:', err);
           });
           connection.release();
+          console.log('Login successful, sending response:', { message: "Login Successful", table });
           return res.send({ message: "Login Successful", table });
         }
 

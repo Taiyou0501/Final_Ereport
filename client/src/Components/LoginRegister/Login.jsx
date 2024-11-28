@@ -9,50 +9,54 @@ import { useAuth } from '../../auth/AuthContext';
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('Attempting login with:', { username, password });
       const response = await api.post('/checkAllTables', {
         username,
         password
       });
-      console.log(response.data);
+      
+      console.log('Login response:', response.data);
+      
       if (response.data.message === "Login Successful") {
-        console.log(`Redirecting to dashboard for table: ${response.data.table}`);
         login(); // Set the authentication state
-        switch (response.data.table) {
-          case 'admin_details':
-            navigate("/admin/home");
-            break;
-          case 'user_details':
-            navigate("/user/index");
-            break;
-          case 'police_details':
-            navigate("/police/home");
-            break;
-          case 'responder_details':
-            navigate("/responder/home");
-            break;
-          case 'unit_details':
-            navigate("/unit/home");
-            break;
-          case 'barangay_details':
-            navigate("/barangay/home");
-            break;
-          default:
-            alert("Unknown table");
+        
+        // Get the table from response
+        const table = response.data.table;
+        console.log('User type:', table);
+
+        // Define the redirect paths
+        const redirectPaths = {
+          'admin_details': '/admin/home',
+          'user_details': '/user/index',
+          'police_details': '/police/home',
+          'responder_details': '/responder/home',
+          'unit_details': '/unit/home',
+          'barangay_details': '/barangay/home'
+        };
+
+        const redirectPath = redirectPaths[table];
+        if (redirectPath) {
+          console.log('Redirecting to:', redirectPath);
+          navigate(redirectPath, { replace: true });
+        } else {
+          setError('Invalid user type');
+          console.error('Unknown table type:', table);
         }
       } else {
-        alert("Invalid Credentials");
+        setError('Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert(error.response?.data?.message || "An error occurred during login");
+      setError(error.response?.data?.message || 'An error occurred during login');
     }
-  }
+  };
 
   return (
     <div className="body-login">
@@ -60,21 +64,34 @@ const Login = () => {
         <div className="formbox-login">
           <form onSubmit={handleSubmit}>
             <h1>Login</h1>
+            {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
             <div className="inputbox-login">
-              <input type="text" id="username" placeholder="Username" 
-                onChange={e => setUsername(e.target.value)} required />
+              <input 
+                type="text" 
+                id="username" 
+                placeholder="Username" 
+                value={username}
+                onChange={e => setUsername(e.target.value)} 
+                required 
+              />
               <FontAwesomeIcon icon={faEnvelope} className="icon" />
             </div>
             <div className="inputbox-login">
-              <input type="password" id="password" placeholder="Password" 
-                onChange={e => setPassword(e.target.value)} required />
+              <input 
+                type="password" 
+                id="password" 
+                placeholder="Password" 
+                value={password}
+                onChange={e => setPassword(e.target.value)} 
+                required 
+              />
               <FontAwesomeIcon icon={faLock} className="icon" />
             </div>
             <div className="remember-forgot-login">
               <label>
                 <input type="checkbox" /> Remember me
               </label>
-              <a href="#">Forgot password?</a>
+              <Link to="/forgot-password">Forgot password?</Link>
             </div>
             <button className="btn-login" type="submit">   
               Login
@@ -87,6 +104,6 @@ const Login = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Login;
