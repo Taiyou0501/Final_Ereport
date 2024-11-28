@@ -165,12 +165,14 @@ const AdminReports = () => {
                 {selectedReport.imageUrl && (
                   <div>
                     <img 
-                      src={`${api.defaults.baseURL}/${selectedReport.imageUrl}`}
+                      src={selectedReport.imageUrl.startsWith('http') 
+                        ? selectedReport.imageUrl 
+                        : `${api.defaults.baseURL}/${selectedReport.imageUrl}`}
                       alt="Report" 
                       className="small-image" 
                       onError={(e) => {
                         console.error('Failed to load image:', e.target.src);
-                        console.log('Attempted image URL:', `${api.defaults.baseURL}/${selectedReport.imageUrl}`);
+                        console.log('Attempted image URL:', e.target.src);
                         e.target.style.display = 'none';
                       }}
                     />

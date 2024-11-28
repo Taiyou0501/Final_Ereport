@@ -1614,3 +1614,33 @@ app.get('/api/test-session', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+app.use((req, res, next) => {
+  if (req.url.startsWith('/upload')) {
+    console.log('File request:', {
+      url: req.url,
+      method: req.method,
+      path: path.join(__dirname, req.url)
+    });
+  }
+  next();
+});
+
+// Ensure upload directory exists
+app.use('/upload', express.static(path.join(__dirname, 'upload')));
+
+// For development
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/upload', express.static(path.join(__dirname, 'upload')));
+} else {
+  // For production on render.com
+  // Make sure this path matches where your files are stored on the server
+  app.use('/upload', express.static('/opt/render/project/src/upload'));
+}
+
+// Add this middleware to log file requests
+app.use('/upload', (req, res, next) => {
+  console.log('Requesting file:', req.url);
+  console.log('Full path:', path.join(__dirname, 'upload', req.url));
+  next();
+});
