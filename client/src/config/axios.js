@@ -13,23 +13,4 @@ const api = axios.create({
     }
 });
 
-// Add request interceptor for debugging
-api.interceptors.request.use(request => {
-    console.log('Starting Request:', request.url);
-    console.log('Request Headers:', request.headers);
-    return request;
-});
-
-// Add response interceptor for debugging
-api.interceptors.response.use(
-    response => {
-        console.log('Response:', response);
-        return response;
-    },
-    error => {
-        console.error('Response Error:', error.response || error);
-        return Promise.reject(error);
-    }
-);
-
 export default api; 

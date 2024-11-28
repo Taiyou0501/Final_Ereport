@@ -18,8 +18,7 @@ const PORT = process.env.PORT || 8081;
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://last-ereport3.vercel.app',
-  'https://last-ereport3-lp3u85485-taiyou0501s-projects.vercel.app'
+  'https://last-ereport3.vercel.app'
 ];
 
 app.use(cors({
@@ -31,8 +30,7 @@ app.use(cors({
 
     if (
       allowedOrigins.includes(origin) || 
-      origin.match(/https:\/\/last-ereport3[a-zA-Z0-9-]*.vercel.app/) ||
-      origin === 'https://last-ereport3.vercel.app'
+      origin.startsWith('https://last-ereport3-')
     ) {
       callback(null, true);
     } else {
