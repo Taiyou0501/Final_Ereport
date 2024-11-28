@@ -349,11 +349,8 @@ const UserIndex = () => {
   useEffect(() => {
     const fetchUploadId = async () => {
       try {
-        const response = await fetch('http://localhost:8081/api/user-upload-id', { credentials: 'include' });
-        if (!response.ok) {
-          throw new Error('Failed to fetch upload ID');
-        }
-        const data = await response.json();
+        const response = await api.get('/api/user-upload-id');
+        const data = response.data;
         setImageId(data.uploadId);
       } catch (error) {
         console.error('Error fetching upload ID:', error);
@@ -367,23 +364,20 @@ const UserIndex = () => {
     const fetchImageDetails = async () => {
       if (imageId) {
         try {
-          const response = await fetch(`http://localhost:8081/images/${imageId}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch image details');
-          }
-          const data = await response.json();
+          const response = await api.get(`/images/${imageId}`);
+          const data = response.data;
           setImageUrl(`${api.defaults.baseURL}/${data.filePath}`);
-          setFilePath(data.filePath); // Store the original filePath
+          setFilePath(data.filePath);
           setLatitude(data.latitude);
           setLongitude(data.longitude);
           const originalDate = moment(data.uploadedAt).format('M/D/YYYY, h:mm:ss A');
           setUploadedAt(originalDate);
-          setOriginalUploadedAt(originalDate); // Store the original uploadedAt
-          fetchPlaceName(data.latitude, data.longitude); // Fetch place name based on coordinates
+          setOriginalUploadedAt(originalDate);
+          fetchPlaceName(data.latitude, data.longitude);
         } catch (error) {
           console.error('Error fetching image details:', error);
         } finally {
-          setLoading(false); // Hide loading popup once data is fetched
+          setLoading(false);
         }
       }
     };
