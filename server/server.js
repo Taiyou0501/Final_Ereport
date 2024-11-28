@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 8081;
 const allowedOrigins = [
   'http://localhost:5173',
   'https://last-ereport3.vercel.app',
-  'https://last-ereport3.vercel.app/'
+  'https://last-ereport3-lp3u85485-taiyou0501s-projects.vercel.app'
 ];
 
 app.use(cors({
@@ -29,8 +29,11 @@ app.use(cors({
       return callback(null, true);
     }
 
-    const normalizedOrigin = origin.replace(/\/$/, '');
-    if (allowedOrigins.some(allowed => allowed.replace(/\/$/, '') === normalizedOrigin)) {
+    if (
+      allowedOrigins.includes(origin) || 
+      origin.match(/https:\/\/last-ereport3[a-zA-Z0-9-]*.vercel.app/) ||
+      origin === 'https://last-ereport3.vercel.app'
+    ) {
       callback(null, true);
     } else {
       console.log('Origin not allowed:', origin);
@@ -106,7 +109,8 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    httpOnly: true
+    httpOnly: true,
+    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
   }
 }));
 
