@@ -3,8 +3,7 @@ import { Outlet } from 'react-router-dom';
 
 const UserLayout = () => {
   return (
-    <div>
-      {/* Add any common layout elements for User here, like a sidebar or header */}
+    <div className="user-layout">
       <Outlet />
     </div>
   );

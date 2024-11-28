@@ -14,6 +14,7 @@ const ProtectedRoute = ({ children }) => {
     const verifyAuth = async () => {
       try {
         const response = await api.get('/checkSession');
+        console.log('Session check response:', response.data);
         setIsValid(response.data.isAuthenticated);
       } catch (error) {
         console.error('Auth verification error:', error);
@@ -24,25 +25,15 @@ const ProtectedRoute = ({ children }) => {
     };
 
     verifyAuth();
-  }, [location.pathname]);
+  }, []);
 
   if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontSize: '1.2rem',
-        color: '#333'
-      }}>
-        Loading...
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   if (!isAuthenticated || !isValid) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    console.log('Not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
   }
 
   return children;

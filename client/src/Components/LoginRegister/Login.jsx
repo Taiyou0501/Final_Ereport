@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./Login.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
@@ -16,7 +16,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Attempting login with:', { username, password });
       const response = await api.post('/checkAllTables', {
         username,
         password
@@ -30,7 +29,6 @@ const Login = () => {
         const table = response.data.table;
         console.log('User type:', table);
 
-        // Use a switch statement for clearer routing logic
         let redirectPath;
         switch (table) {
           case 'user_details':
@@ -55,41 +53,27 @@ const Login = () => {
             throw new Error('Unknown user type');
         }
 
-        console.log('Redirecting to:', redirectPath);
-        // Use navigate with state to force a refresh
-        navigate(redirectPath, { 
-          replace: true,
-          state: { from: 'login' }
-        });
-        
-        // Force a page reload if navigation doesn't work
-        setTimeout(() => {
-          if (window.location.pathname === '/login') {
-            window.location.href = redirectPath;
-          }
-        }, 100);
+        if (redirectPath) {
+          console.log('Attempting to redirect to:', redirectPath);
+          // First try using navigate
+          navigate(redirectPath, { replace: true });
+          
+          // If that doesn't work, try window.location after a short delay
+          setTimeout(() => {
+            if (window.location.pathname === '/login') {
+              console.log('Forcing redirect via window.location');
+              window.location.href = redirectPath;
+            }
+          }, 500);
+        }
+      } else {
+        setError('Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
       setError(error.response?.data?.message || 'An error occurred during login');
     }
   };
-
-  // Add this effect to check if we're stuck on login page
-  useEffect(() => {
-    const checkStuckOnLogin = async () => {
-      try {
-        const response = await api.get('/checkSession');
-        if (response.data.isAuthenticated) {
-          navigate('/user/index', { replace: true });
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-      }
-    };
-
-    checkStuckOnLogin();
-  }, [navigate]);
 
   return (
     <div className="body-login">
