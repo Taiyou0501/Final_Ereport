@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import '../CSS/Dashboard.css';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/axios';
 import Sidebar from "./Sidebar";
 
-const UnitDashboard = () => {
+const AddResponderAccount = () => {
   const navigate = useNavigate();
   const [values, setValues] = useState({
     firstname: '',
@@ -14,31 +14,35 @@ const UnitDashboard = () => {
     password: '',
     vehicle: '',
     respondertype: '',
-    cpnumber: '' // Add CP number here
-  })
+    cpnumber: ''
+  });
   const [error, setError] = useState('');
 
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(values);
-    api.post('/u-add-responder', values)
-      .then(res => {
-        console.log("Responder added successfully");
-        alert("Responder added successfully");
-        navigate("/unit/accounts");
-      })
-      .catch(err => {
-        console.log(err);
-        if (err.response && err.response.data && err.response.data.message) {
-          setError(err.response.data.message);
-        } else {
-          setError('An error occurred. Please try again.');
-        }
-      });
+    
+    // Validate all fields are filled
+    const requiredFields = ['firstname', 'lastname', 'respondertype', 'vehicle', 'email', 'username', 'password', 'cpnumber'];
+    const emptyFields = requiredFields.filter(field => !values[field]);
+    
+    if (emptyFields.length > 0) {
+      setError(`Please fill in all required fields: ${emptyFields.join(', ')}`);
+      return;
+    }
+
+    try {
+      const response = await api.post('/u-add-responder', values);
+      console.log("API Response:", response.data);
+      alert("Responder added successfully");
+      navigate("/unit/accounts");
+    } catch (err) {
+      console.error('Error details:', err.response?.data || err.message);
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
+    }
   };
 
   return (
@@ -53,11 +57,21 @@ const UnitDashboard = () => {
               <form onSubmit={handleSubmit}>
                 <h1>Create Responder</h1>
                 <div className="two-forms">
-                <div className="inputbox">
-                    <input type="firstname" placeholder="First Name" name='firstname' required onChange={handleChange}/>
+                  <div className="inputbox">
+                    <input 
+                      type="text" 
+                      placeholder="First Name" 
+                      name='firstname' 
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className="inputbox">
-                    <input type="lastname" placeholder="Last Name" name='lastname' required onChange={handleChange}/>
+                    <input 
+                      type="text" 
+                      placeholder="Last Name" 
+                      name='lastname' 
+                      onChange={handleChange}
+                    />
                   </div>
                 </div>
                 <div className="two-forms">
@@ -112,4 +126,4 @@ const UnitDashboard = () => {
   );
 }
 
-export default UnitDashboard;
+export default AddResponderAccount;
