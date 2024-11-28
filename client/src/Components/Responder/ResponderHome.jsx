@@ -11,6 +11,7 @@ import vehicularIcon from '../Assets/car crash.png';
 import policeIcon from '../Assets/police station.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
 import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
+import api from '../../config/axios';  // Add this import
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -26,16 +27,13 @@ const LocationMarker = ({ setCurrentLocation }) => {
 
     useEffect(() => {
         // Fetch the responder type from session
-        fetch('http://localhost:8081/checkSession', {
-            credentials: 'include'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.isAuthenticated) {
-                setResponderType(data.user.respondertype);
-            }
-        })
-        .catch(error => console.error('Error fetching session:', error));
+        api.get('/checkSession')
+            .then(response => {
+                if (response.data.isAuthenticated) {
+                    setResponderType(response.data.user.respondertype);
+                }
+            })
+            .catch(error => console.error('Error fetching session:', error));
     }, []);
 
     // Get the appropriate icon based on responder type
@@ -53,11 +51,10 @@ const LocationMarker = ({ setCurrentLocation }) => {
     };
 
     useEffect(() => {
-        fetch('http://localhost:8081/api/full_reports/locations')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Fetched report locations:', data);
-                setReportLocations(data);
+        api.get('/api/full_reports/locations')
+            .then(response => {
+                console.log('Fetched report locations:', response.data);
+                setReportLocations(response.data);
             })
             .catch(error => console.error('Error fetching report locations:', error));
     }, []);
@@ -133,21 +130,13 @@ const Dashboard = () => {
     const [showModal, setShowModal] = useState(false);
 
     const updateStatus = (status, latitude, longitude) => {
-        fetch('http://localhost:8081/api/account/status', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status, latitude, longitude }),
-            credentials: 'include',
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message);
-        })
-        .catch(error => {
-            console.error('Error updating status:', error);
-        });
+        api.put('/api/account/status', { status, latitude, longitude })
+            .then(response => {
+                console.log(response.data.message);
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+            });
     };
 
     const handleActive = () => {
@@ -213,17 +202,13 @@ const Dashboard = () => {
 
     useEffect(() => {
         // Fetch the authenticated responder's ID
-        fetch('http://localhost:8081/checkSession', {
-            method: 'GET',
-            credentials: 'include',
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.isAuthenticated) {
-                setResponderId(data.user.id);
-            }
-        })
-        .catch(error => console.error('Error fetching session data:', error));
+        api.get('/checkSession')
+            .then(response => {
+                if (response.data.isAuthenticated) {
+                    setResponderId(response.data.user.id);
+                }
+            })
+            .catch(error => console.error('Error fetching session data:', error));
     }, []);
 
     const navigate = useNavigate();
@@ -233,37 +218,21 @@ const Dashboard = () => {
         if (isActive && responderId) {
             interval = setInterval(() => {
                 // First check for regular responder reports
-                fetch('http://localhost:8081/api/full_reports/closestResponder', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ responderId }),
-                    credentials: 'include',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.match) {
-                        handleReportMatch(data.reportId);
-                    } else {
-                        // If no regular report, check for police reports
-                        return fetch('http://localhost:8081/api/full_reports/closestPolice', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ policeId: responderId }),
-                            credentials: 'include',
-                        });
-                    }
-                })
-                .then(response => response?.json())
-                .then(data => {
-                    if (data?.match) {
-                        handleReportMatch(data.reportId);
-                    }
-                })
-                .catch(error => console.error('Error checking for reports:', error));
+                api.post('/api/full_reports/closestResponder', { responderId })
+                    .then(response => {
+                        if (response.data.match) {
+                            handleReportMatch(response.data.reportId);
+                        } else {
+                            // If no regular report, check for police reports
+                            return api.post('/api/full_reports/closestPolice', { policeId: responderId });
+                        }
+                    })
+                    .then(response => {
+                        if (response?.data?.match) {
+                            handleReportMatch(response.data.reportId);
+                        }
+                    })
+                    .catch(error => console.error('Error checking for reports:', error));
             }, 5000);
         }
         return () => clearInterval(interval);

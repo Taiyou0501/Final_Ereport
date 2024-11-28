@@ -2,6 +2,7 @@ import '../CSS/responder.css';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import UserLogout from '../../UserLogout';
+import api from '../../config/axios';
 
 const DashboardFinal = () => {
     const navigate = useNavigate();
@@ -12,14 +13,11 @@ const DashboardFinal = () => {
     useEffect(() => {
         const fetchReportDetails = async () => {
             try {
-                const response = await fetch('http://localhost:8081/api/responder/report', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    setReportDetails(data);
+                const response = await api.get('/api/responder/report');
+                if (response.status === 200) {
+                    setReportDetails(response.data);
                 } else {
-                    console.error('Error fetching report details:', data.message);
+                    console.error('Error fetching report details:', response.data.message);
                 }
             } catch (error) {
                 console.error('Error fetching report details:', error);
@@ -56,17 +54,13 @@ const DashboardFinal = () => {
 
     const handleBackToMainMenu = async () => {
         try {
-            const response = await fetch('http://localhost:8081/api/responder/resetReport', {
-                method: 'PUT',
-                credentials: 'include'
-            });
-            const data = await response.json();
-            if (response.ok) {
-                console.log(data.message);
+            const response = await api.put('/api/responder/resetReport');
+            if (response.status === 200) {
+                console.log(response.data.message);
                 localStorage.setItem('situationStatus', 'Unavailable');
                 navigate('/responder/home');
             } else {
-                console.error('Error resetting reportId:', data.message);
+                console.error('Error resetting reportId:', response.data.message);
             }
         } catch (error) {
             console.error('Error resetting reportId:', error);
@@ -85,6 +79,8 @@ const DashboardFinal = () => {
         const distance = R * c; // Distance in kilometers
         return distance.toFixed(2); // Return distance with 2 decimal places
     };
+
+    const baseURL = api.defaults.baseURL;
 
     return (
         <div className="index-responder-body">
@@ -116,7 +112,11 @@ const DashboardFinal = () => {
                         </div>
                         <div className="picture-container">
                             {reportDetails && reportDetails.imageUrl && (
-                                <img src={`http://localhost:8081/${reportDetails.imageUrl}`} alt="Scene Photo" className="scene-picture" />
+                                <img 
+                                    src={`${baseURL}/${reportDetails.imageUrl}`} 
+                                    alt="Scene Photo" 
+                                    className="scene-picture" 
+                                />
                             )}
                         </div>
                     </div>

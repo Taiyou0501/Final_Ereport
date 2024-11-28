@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import UserLogout from '../../UserLogout';
+import api from '../../config/axios';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -55,15 +56,11 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchReportDetails = async () => {
             try {
-                const response = await fetch('http://localhost:8081/api/responder/report', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    setReportDetails(data);
-                    console.log('Report Details Fetched:', data);
+                const response = await api.get('/api/responder/report');
+                if (response.status === 200) {
+                    setReportDetails(response.data);
                 } else {
-                    console.error('Error fetching report details:', data.message);
+                    console.error('Error fetching report details:', response.data.message);
                 }
             } catch (error) {
                 console.error('Error fetching report details:', error);
@@ -110,41 +107,23 @@ const Dashboard = () => {
             setEta(roundedEta);
 
             try {
-                const sessionResponse = await fetch('http://localhost:8081/checkSession', {
-                    credentials: 'include'
-                });
-                const sessionData = await sessionResponse.json();
+                const sessionResponse = await api.get('/checkSession');
+                const sessionData = sessionResponse.data;
                 
                 // Get responder type from responder_details
-                const responderResponse = await fetch('http://localhost:8081/api/responder/type', {
-                    credentials: 'include'
-                });
-                const responderData = await responderResponse.json();
+                const responderResponse = await api.get('/api/responder/type');
+                const responderData = responderResponse.data;
                 const isPolice = responderData.respondertype === 'Police';
                 const responderId = responderData.id;
 
                 if (!isPolice && reportDetails.closestResponderId && reportDetails.closestResponderId !== "No responder available") {
-                    await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/status`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            status: 'waiting for responder', 
-                            eta: roundedEta 
-                        }),
-                        credentials: 'include'
+                    await api.put(`/api/full_report/${reportDetails.id}/status`, {
+                        status: 'waiting for responder',
+                        eta: roundedEta
                     });
                 } else if (isPolice && reportDetails.closestPoliceId === `responder_${responderId}`) {
-                    await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/policeStatus`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            closestPoliceId: `responder_${responderId} (RESPONDING)`
-                        }),
-                        credentials: 'include'
+                    await api.put(`/api/full_report/${reportDetails.id}/policeStatus`, {
+                        closestPoliceId: `responder_${responderId} (RESPONDING)`
                     });
                 }
             } catch (error) {
@@ -174,35 +153,19 @@ const Dashboard = () => {
                                 clearInterval(intervalRef.current);
 
                                 try {
-                                    const responderResponse = await fetch('http://localhost:8081/api/responder/type', {
-                                        credentials: 'include'
-                                    });
-                                    const responderData = await responderResponse.json();
+                                    const responderResponse = await api.get('/api/responder/type');
+                                    const responderData = responderResponse.data;
                                     const isPolice = responderData.respondertype === 'Police';
                                     const responderId = responderData.id;
 
                                     if (!isPolice && reportDetails.closestResponderId && reportDetails.closestResponderId !== "No responder available") {
-                                        await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/status`, {
-                                            method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify({ 
-                                                status: 'Responded',
-                                                responderId: responderId 
-                                            }),
-                                            credentials: 'include'
+                                        await api.put(`/api/full_report/${reportDetails.id}/status`, {
+                                            status: 'Responded',
+                                            responderId: responderId
                                         });
                                     } else if (isPolice && reportDetails.closestPoliceId.includes(`responder_${responderId}`)) {
-                                        await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/policeStatus`, {
-                                            method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify({ 
-                                                closestPoliceId: `responder_${responderId} (RESPONDED)`
-                                            }),
-                                            credentials: 'include'
+                                        await api.put(`/api/full_report/${reportDetails.id}/policeStatus`, {
+                                            closestPoliceId: `responder_${responderId} (RESPONDED)`
                                         });
                                     }
                                     navigate('/responder/final');
@@ -245,15 +208,9 @@ const Dashboard = () => {
         
         try {
             console.log('Attempting to mark report as fake:', reportDetails.id); // Debug log
-            const response = await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/setFakeReport`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
+            const response = await api.put(`/api/full_report/${reportDetails.id}/setFakeReport`);
 
-            if (response.ok) {
+            if (response.status === 200) {
                 console.log('Report marked as fake successfully');
                 navigate('/responder/home');
             } else {
