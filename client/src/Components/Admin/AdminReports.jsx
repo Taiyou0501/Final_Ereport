@@ -28,6 +28,21 @@ const AdminReports = () => {
     fetchReports();
   }, []);
 
+  useEffect(() => {
+    if (selectedReport?.imageUrl) {
+      const imageUrl = `${api.defaults.baseURL}/${selectedReport.imageUrl}`;
+      console.log('Full image URL:', imageUrl);
+      // Try to fetch the image URL to check if it's accessible
+      fetch(imageUrl)
+        .then(response => {
+          console.log('Image fetch response:', response.status);
+        })
+        .catch(error => {
+          console.error('Image fetch error:', error);
+        });
+    }
+  }, [selectedReport]);
+
   const handleRowClick = (report) => {
     setSelectedReport(report);
   };
@@ -150,11 +165,12 @@ const AdminReports = () => {
                 {selectedReport.imageUrl && (
                   <div>
                     <img 
-                      src={`${api.defaults.baseURL}/${selectedReport.imageUrl}`} 
+                      src={`${api.defaults.baseURL}/${selectedReport.imageUrl}`}
                       alt="Report" 
                       className="small-image" 
                       onError={(e) => {
-                        console.error('Failed to load image:', `${api.defaults.baseURL}/${selectedReport.imageUrl}`);
+                        console.error('Failed to load image:', e.target.src);
+                        console.log('Attempted image URL:', `${api.defaults.baseURL}/${selectedReport.imageUrl}`);
                         e.target.style.display = 'none';
                       }}
                     />
