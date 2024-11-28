@@ -233,7 +233,7 @@ const UserIndex = () => {
         if (response.status === 200) {
             setHasSaved(true);
             setNotification(closestResponder === 'No responder available' ? 
-                'No responder available. Report saved.' : 
+                'No responder available. Please try calling this number 0977 772 3909-CDRRMO' : 
                 'Report saved successfully with responder assigned!');
         }
 
