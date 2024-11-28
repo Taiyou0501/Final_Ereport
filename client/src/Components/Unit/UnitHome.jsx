@@ -12,6 +12,7 @@ import vehicularIcon from '../Assets/car crash.png';
 import policeIcon from '../Assets/Police1.png'; 
 import barangayIcon from '../Assets/barangay hall.png';
 import othersIcon from '../Assets/others1.png'; // Import the custom icon for Others
+import api from '../../config/axios';  // Add this import at the top
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -26,11 +27,10 @@ const LocationMarker = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8081/api/full_reports/locations')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fetched report locations:', data); // Log the fetched data
-        setReportLocations(data);
+    api.get('/api/full_reports/locations')
+      .then(response => {
+        console.log('Fetched report locations:', response.data);
+        setReportLocations(response.data);
       })
       .catch(error => console.error('Error fetching report locations:', error));
   }, []);
@@ -55,6 +55,9 @@ const LocationMarker = () => {
     Others: L.icon({  iconUrl: othersIcon, iconSize: [80, 80], iconAnchor: [20, 40] }) // Add the custom icon for Others
   };
 
+  // For image URLs in the Popup, use the base URL from axios config
+  const baseURL = api.defaults.baseURL;
+
   return (
     <>
       {reportLocations.map((location, index) => {
@@ -77,7 +80,7 @@ const LocationMarker = () => {
             <Popup>
               <div>
                 <p>{location.type}</p>
-                {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '100px', height: '100px' }} />}
+                {location.imageUrl && <img src={`${baseURL}/${location.imageUrl}`} alt={location.type} style={{ width: '100px', height: '100px' }} />}
               </div>
             </Popup>
           </Marker>

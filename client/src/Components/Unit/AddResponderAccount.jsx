@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import '../CSS/Dashboard.css';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../config/axios';
 import Sidebar from "./Sidebar";
 
 const UnitDashboard = () => {
@@ -25,7 +25,7 @@ const UnitDashboard = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log(values);
-    axios.post('http://localhost:8081/u-add-responder', values)
+    api.post('/u-add-responder', values)
       .then(res => {
         console.log("Responder added successfully");
         alert("Responder added successfully");

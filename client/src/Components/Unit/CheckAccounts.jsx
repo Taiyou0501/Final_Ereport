@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import '../CSS/Dashboard.css';
-import axios from 'axios';
+import api from '../../config/axios';
 import Sidebar from "./Sidebar";
 
 const CheckAccounts = () => {
@@ -21,7 +21,7 @@ const CheckAccounts = () => {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/api/accounts');
+        const response = await api.get('/api/accounts');
         setAccounts({
           responder_details: response.data.responder_details,
           unit_details: response.data.unit_details,
@@ -62,7 +62,7 @@ const CheckAccounts = () => {
   const handleAccountClick = async (table, id) => {
     setLoading(true); // Show loading popup
     try {
-      const response = await axios.get(`http://localhost:8081/api/accounts/${table}/${id}`);
+      const response = await api.get(`/api/accounts/${table}/${id}`);
       setSelectedAccount(response.data);
     } catch (error) {
       console.error('Error fetching account details:', error);
