@@ -83,241 +83,167 @@ const UserIndex = () => {
     return distances;
   };
 
-  const pollForResponder = async (fullReportData, startTime) => {
-    try {
-      let responderType = '';
-      if (report.type === 'Fire Emergency') {
-        responderType = 'Firefighter';
-      } else {
-        responderType = 'Medical Professional';
-      }
-
-      const respondersResponse = await api.get('/api/responders/active', {
-        params: { respondertype: responderType }
-      });
-      const responders = respondersResponse.data;
-
-      let foundResponder = null;
-      if (responders.length > 0) {
-        const graph = {};
-        const incidentNode = 'incident';
-        graph[incidentNode] = {};
-
-        responders.forEach(responder => {
-          const responderNode = `responder_${responder.id}`;
-          graph[responderNode] = {};
-          const distance = calculateDistance(
-            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
-            { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
-          );
-          graph[incidentNode][responderNode] = distance;
-          graph[responderNode][incidentNode] = distance;
-        });
-
-        const distances = dijkstra(graph, incidentNode);
-        let minDistance = Infinity;
-        for (const responderNode in distances) {
-          if (responderNode !== incidentNode && distances[responderNode] < minDistance && distances[responderNode] <= 3) {
-            minDistance = distances[responderNode];
-            foundResponder = responderNode;
-          }
-        }
-      }
-
-      const currentTime = Date.now();
-      const elapsedTime = currentTime - startTime;
-
-      if (foundResponder) {
-        // Save report with found responder
-        fullReportData.closestResponderId = foundResponder;
-        await api.post('/api/full_report', fullReportData);
-        setClosestResponderId(foundResponder);
-        setHasSaved(true);
-        setNotification('Responder found and data saved successfully!');
-        setIsPolling(false);
-      } else if (elapsedTime >= 60000) { // 1 minute timeout
-        // Save report with no responder available
-        fullReportData.closestResponderId = 'No responder available';
-        await api.post('/api/full_report', fullReportData);
-        setClosestResponderId('No responder available');
-        setHasSaved(true);
-        setNotification('No responder found within 1 minute. Data saved.');
-        setIsPolling(false);
-      } else {
-        // Continue polling
-        const timeoutId = setTimeout(() => pollForResponder(fullReportData, startTime), 3000);
-        setPollingTimeout(timeoutId);
-      }
-    } catch (error) {
-      console.error('Error during polling:', error);
-      setNotification('Error while searching for responders.');
-      setIsPolling(false);
-    }
-  };
-
   const handleSaveClick = async () => {
     try {
-      if (isPolling) return; // Prevent multiple polling sessions
-      setIsPolling(true);
+        if (isPolling) return;
+        setIsPolling(true);
+        setNotification('Searching for available responders...');
 
-      let responderType = '';
-      if (report.type === 'Fire Emergency') {
-        responderType = 'Firefighter';
-      } else {
-        responderType = 'Medical Professional';
-      }
-  
-      const respondersResponse = await api.get('/api/responders/active', {
-        params: { respondertype: responderType }
-      });
-      const responders = respondersResponse.data;
-  
-      console.log('Active responders:', responders);
-  
-      let closestResponder = 'No responder available';
-  
-      if (responders.length > 0) {
-        const graph = {};
-        const incidentNode = 'incident';
-        graph[incidentNode] = {};
-  
-        responders.forEach(responder => {
-          const responderNode = `responder_${responder.id}`;
-          graph[responderNode] = {};
-          const distance = calculateDistance(
-            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
-            { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
-          );
-          graph[incidentNode][responderNode] = distance;
-          graph[responderNode][incidentNode] = distance;
-        });
-  
-        const distances = dijkstra(graph, incidentNode);
-        console.log('Distances:', distances);
-  
-        let minDistance = Infinity;
-        for (const responderNode in distances) {
-          if (responderNode !== incidentNode && distances[responderNode] < minDistance && distances[responderNode] <= 3) {
-            minDistance = distances[responderNode];
-            closestResponder = responderNode;
-          }
+        // Find closest responder based on type
+        let responderType = '';
+        if (report.type === 'Fire Emergency') {
+            responderType = 'Firefighter';
+        } else {
+            responderType = 'Medical Professional';
         }
-  
-        console.log('Closest responder:', closestResponder);
-      } else if (report.type === 'Fire Emergency') {
-        closestResponder = 'No available Firefighter';
-      }
-  
-      const barangaysResponse = await api.get('/api/barangays/active');
-      const barangays = barangaysResponse.data;
-  
-      console.log('Active barangays:', barangays);
-  
-      let closestBarangay = 'No barangay available';
-  
-      if (barangays.length > 0) {
-        const graph = {};
-        const incidentNode = 'incident';
-        graph[incidentNode] = {};
-  
-        barangays.forEach(barangay => {
-          const barangayNode = `barangay_${barangay.id}`;
-          graph[barangayNode] = {};
-          const distance = calculateDistance(
-            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
-            { latitude: parseFloat(barangay.latitude), longitude: parseFloat(barangay.longitude) }
-          );
-          graph[incidentNode][barangayNode] = distance;
-          graph[barangayNode][incidentNode] = distance;
+
+        // Get active responders
+        const respondersResponse = await api.get('/api/responders/active', {
+            params: { respondertype: responderType }
         });
-  
-        const distances = dijkstra(graph, incidentNode);
-        console.log('Distances:', distances);
-  
-        let minDistance = Infinity;
-        for (const barangayNode in distances) {
-          if (barangayNode !== incidentNode && distances[barangayNode] < minDistance && distances[barangayNode] <= 3) {
-            minDistance = distances[barangayNode];
-            closestBarangay = barangayNode;
-          }
+        const responders = respondersResponse.data;
+        let closestResponder = 'No responder available';
+
+        // Find closest responder if any are available
+        if (responders.length > 0) {
+            const graph = {};
+            const incidentNode = 'incident';
+            graph[incidentNode] = {};
+
+            responders.forEach(responder => {
+                const responderNode = `responder_${responder.id}`;
+                graph[responderNode] = {};
+                const distance = calculateDistance(
+                    { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+                    { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
+                );
+                graph[incidentNode][responderNode] = distance;
+                graph[responderNode][incidentNode] = distance;
+            });
+
+            const distances = dijkstra(graph, incidentNode);
+            let minDistance = Infinity;
+            
+            for (const responderNode in distances) {
+                if (responderNode !== incidentNode && distances[responderNode] < minDistance && distances[responderNode] <= 3) {
+                    minDistance = distances[responderNode];
+                    closestResponder = responderNode;
+                }
+            }
+        } else if (report.type === 'Fire Emergency') {
+            closestResponder = 'No available Firefighter';
         }
-  
-        console.log('Closest barangay:', closestBarangay);
-      } else {
-        closestBarangay = 'No barangay available';
-      }
-  
-      const policeResponse = await api.get('/api/responders/active', {
-        params: { respondertype: 'Police' }
-      });
-      const policeResponders = policeResponse.data;
-  
-      let closestPolice = 'No police available';
-      if (policeResponders.length > 0) {
-        const graph = {};
-        const incidentNode = 'incident';
-        graph[incidentNode] = {};
-  
-        policeResponders.forEach(responder => {
-          const responderNode = `responder_${responder.id}`;
-          graph[responderNode] = {};
-          const distance = calculateDistance(
-            { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
-            { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
-          );
-          graph[incidentNode][responderNode] = distance;
-          graph[responderNode][incidentNode] = distance;
+
+        // Get active barangays and find closest
+        const barangaysResponse = await api.get('/api/barangays/active');
+        const barangays = barangaysResponse.data;
+        let closestBarangay = 'No barangay available';
+
+        if (barangays.length > 0) {
+            const graph = {};
+            const incidentNode = 'incident';
+            graph[incidentNode] = {};
+
+            barangays.forEach(barangay => {
+                const barangayNode = `barangay_${barangay.id}`;
+                graph[barangayNode] = {};
+                const distance = calculateDistance(
+                    { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+                    { latitude: parseFloat(barangay.latitude), longitude: parseFloat(barangay.longitude) }
+                );
+                graph[incidentNode][barangayNode] = distance;
+                graph[barangayNode][incidentNode] = distance;
+            });
+
+            const distances = dijkstra(graph, incidentNode);
+            let minDistance = Infinity;
+            
+            for (const barangayNode in distances) {
+                if (barangayNode !== incidentNode && distances[barangayNode] < minDistance && distances[barangayNode] <= 3) {
+                    minDistance = distances[barangayNode];
+                    closestBarangay = barangayNode;
+                }
+            }
+        }
+
+        // Get active police and find closest
+        const policeResponse = await api.get('/api/responders/active', {
+            params: { respondertype: 'Police' }
         });
-  
-        const distances = dijkstra(graph, incidentNode);
-        let minDistance = Infinity;
-        for (const policeNode in distances) {
-          if (policeNode !== incidentNode && distances[policeNode] < minDistance && distances[policeNode] <= 3) {
-            minDistance = distances[policeNode];
-            closestPolice = policeNode;
-          }
+        const policeResponders = policeResponse.data;
+        let closestPolice = 'No police available';
+
+        if (policeResponders.length > 0) {
+            const graph = {};
+            const incidentNode = 'incident';
+            graph[incidentNode] = {};
+
+            policeResponders.forEach(responder => {
+                const responderNode = `responder_${responder.id}`;
+                graph[responderNode] = {};
+                const distance = calculateDistance(
+                    { latitude: parseFloat(latitude), longitude: parseFloat(longitude) },
+                    { latitude: parseFloat(responder.latitude), longitude: parseFloat(responder.longitude) }
+                );
+                graph[incidentNode][responderNode] = distance;
+                graph[responderNode][incidentNode] = distance;
+            });
+
+            const distances = dijkstra(graph, incidentNode);
+            let minDistance = Infinity;
+            
+            for (const policeNode in distances) {
+                if (policeNode !== incidentNode && distances[policeNode] < minDistance && distances[policeNode] <= 3) {
+                    minDistance = distances[policeNode];
+                    closestPolice = policeNode;
+                }
+            }
         }
-      }
-  
-      setClosestPoliceId(closestPolice);
-  
-      setClosestResponderId(closestResponder);
-      setClosestBarangayId(closestBarangay);
-      console.log('Closest Responder ID:', closestResponder);
-      console.log('Closest Barangay ID:', closestBarangay);
-  
-      const parsedDate = moment(uploadedAt, 'M/D/YYYY, h:mm:ss A');
-      const adjustedUploadedAt = parsedDate.subtract(4, 'hours').toISOString();
-  
-      console.log('closestResponderId before setting fullReportData:', closestResponder);
-  
-      const fullReportData = {
-        victim: victimName,
-        reporterId: reporterId,
-        type: report ? report.type : '[Accident Type]',
-        latitude,
-        longitude,
-        location,
-        description: report ? report.description : '[Insert Description]' + (closestResponder !== 'No responder available' ? '' : ' No responder available.'),
-        uploadedAt: adjustedUploadedAt,
-        imageUrl: filePath,
-        status: 'active',
-        closestResponderId: closestResponder,
-        closestBarangayId: closestBarangay,
-        closestPoliceId: closestPolice
-      };
-  
-      console.log('Full report data before sending:', fullReportData);
-  
-      setNotification('Searching for available responders...');
-      pollForResponder(fullReportData, Date.now());
+
+        // Update state with found responders
+        setClosestResponderId(closestResponder);
+        setClosestBarangayId(closestBarangay);
+        setClosestPoliceId(closestPolice);
+
+        // Prepare report data
+        const parsedDate = moment(uploadedAt, 'M/D/YYYY, h:mm:ss A');
+        const adjustedUploadedAt = parsedDate.format('YYYY-MM-DD HH:mm:ss');
+
+        const fullReportData = {
+            victim: victimName || '[N/A]',
+            reporterId: reporterId,
+            type: report ? report.type : '[Accident Type]',
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude),
+            location: location || 'Location not specified',
+            description: report ? report.description : '[Insert Description]',
+            uploadedAt: adjustedUploadedAt,
+            imageUrl: filePath,
+            status: 'active',
+            closestResponderId: closestResponder,
+            closestBarangayId: closestBarangay,
+            closestPoliceId: closestPolice,
+            eta: null,
+            barangay_eta: null
+        };
+
+        // Save report to database
+        const response = await api.post('/api/full_report', fullReportData);
+        
+        if (response.status === 200) {
+            setHasSaved(true);
+            setNotification(closestResponder === 'No responder available' ? 
+                'No responder available. Report saved.' : 
+                'Report saved successfully with responder assigned!');
+        }
 
     } catch (error) {
-      console.error('Error initiating save process:', error);
-      setNotification('Error saving data. Please try again.');
-      setIsPolling(false);
+        console.error('Error saving report:', error);
+        setNotification('Error saving report. Please try again.');
+    } finally {
+        setIsPolling(false);
     }
-  };
+};
 
   const handleCombinedClick = async () => {
     if (!hasSaved) {
