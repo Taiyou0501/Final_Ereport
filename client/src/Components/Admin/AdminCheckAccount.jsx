@@ -4,7 +4,7 @@ import '../CSS/Dashboard.css';
 import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import api from '../../config/axios';
 import Logout from "../../Logout";
 
 const AdminCheckAccount = () => {
@@ -12,72 +12,50 @@ const AdminCheckAccount = () => {
     user_details: [],
     responder_details: [],
     unit_details: [],
-    police_details: [],
     barangay_details: []
   });
   const [filteredAccounts, setFilteredAccounts] = useState({
     user_details: [],
     responder_details: [],
     unit_details: [],
-    police_details: [],
     barangay_details: []
   });
-  const [selectedAccount, setSelectedAccount] = useState(null); // State to manage selected account
-  const [loading, setLoading] = useState(false); // State to manage loading
-  const [search, setSearch] = useState(''); // State to manage search input
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/api/accounts');
-        console.log('API Response:', response.data); // Log the API response
+        setLoading(true);
+        const response = await api.get('/api/accounts');
+        console.log('Accounts fetched:', response.data);
         setAccounts(response.data);
-        setFilteredAccounts(response.data); // Initialize filtered accounts
-      } catch (error) {
-        console.error('Error fetching accounts:', error);
+        setFilteredAccounts(response.data);
+        setError('');
+      } catch (err) {
+        console.error('Error fetching accounts:', err);
+        setError('Failed to load accounts. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchAccounts();
   }, []);
 
-  useEffect(() => {
-    const filterAccounts = () => {
-      const lowercasedSearch = search.toLowerCase();
-      const filtered = {
-        user_details: accounts.user_details.filter(account =>
-          account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch)
-        ),
-        responder_details: accounts.responder_details.filter(account =>
-          account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch)
-        ),
-        unit_details: accounts.unit_details.filter(account =>
-          account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch)
-        ),
-        barangay_details: accounts.barangay_details.filter(account =>
-          account.username.toLowerCase().includes(lowercasedSearch) ||
-          account.email.toLowerCase().includes(lowercasedSearch) ||
-          account.barangay?.toLowerCase().includes(lowercasedSearch)
-        )
-      };
-      setFilteredAccounts(filtered);
-    };
-
-    filterAccounts();
-  }, [search, accounts]);
-
   const handleAccountClick = async (table, id) => {
-    setLoading(true); // Show loading popup
     try {
-      const response = await axios.get(`http://localhost:8081/api/accounts/${table}/${id}`);
+      setLoading(true);
+      const response = await api.get(`/api/accounts/${table}/${id}`);
       setSelectedAccount(response.data);
-    } catch (error) {
-      console.error('Error fetching account details:', error);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching account details:', err);
+      setError('Failed to load account details. Please try again.');
     } finally {
-      setLoading(false); // Hide loading popup
+      setLoading(false);
     }
   };
 
@@ -144,6 +122,7 @@ const AdminCheckAccount = () => {
         <div className="tabs-admin">
           <div className="home-wrapper">
             <h2>List of Accounts</h2>
+            {error && <div className="error-message">{error}</div>}
             <input
               type="text"
               placeholder="Search accounts..."
@@ -151,68 +130,67 @@ const AdminCheckAccount = () => {
               onChange={(e) => setSearch(e.target.value)}
               className="search-bar"
             />
-            <div className="account-section user">
-              <strong>USER</strong>
-              <ul>
-                {filteredAccounts.user_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('user_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="account-section responder">
-              <strong>RESPONDER</strong>
-              <ul>
-                {filteredAccounts.responder_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('responder_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                    <span>{account.respondertype}</span>
-                    <span>{account.vehicle}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="account-section unit">
-              <strong>UNIT</strong>
-              <ul>
-                {filteredAccounts.unit_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('unit_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="account-section barangay">
-              <strong>BARANGAY</strong>
-              <ul>
-                {filteredAccounts.barangay_details.map(account => (
-                  <li key={account.id} onClick={() => handleAccountClick('barangay_details', account.id)}>
-                    <span>{account.id}</span>
-                    <span>{account.username}</span>
-                    <span>{account.email}</span>
-                    <span>{account.barangay}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {loading && !selectedAccount ? (
+              <div className="loading">Loading accounts...</div>
+            ) : (
+              <>
+                <div className="account-section user">
+                  <strong>USER</strong>
+                  <ul>
+                    {filteredAccounts.user_details.map(account => (
+                      <li key={account.id} onClick={() => handleAccountClick('user_details', account.id)}>
+                        <span>{account.id}</span>
+                        <span>{account.username}</span>
+                        <span>{account.email}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="account-section responder">
+                  <strong>RESPONDER</strong>
+                  <ul>
+                    {filteredAccounts.responder_details.map(account => (
+                      <li key={account.id} onClick={() => handleAccountClick('responder_details', account.id)}>
+                        <span>{account.id}</span>
+                        <span>{account.username}</span>
+                        <span>{account.email}</span>
+                        <span>{account.respondertype}</span>
+                        <span>{account.vehicle}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="account-section unit">
+                  <strong>UNIT</strong>
+                  <ul>
+                    {filteredAccounts.unit_details.map(account => (
+                      <li key={account.id} onClick={() => handleAccountClick('unit_details', account.id)}>
+                        <span>{account.id}</span>
+                        <span>{account.username}</span>
+                        <span>{account.email}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="account-section barangay">
+                  <strong>BARANGAY</strong>
+                  <ul>
+                    {filteredAccounts.barangay_details.map(account => (
+                      <li key={account.id} onClick={() => handleAccountClick('barangay_details', account.id)}>
+                        <span>{account.id}</span>
+                        <span>{account.username}</span>
+                        <span>{account.email}</span>
+                        <span>{account.barangay}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
 
-      {loading && (
-        <div className="loading-overlay">
-          <div className="loading-popup">
-            <p>Loading...</p>
-          </div>
-        </div>
-      )}
       {selectedAccount && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-popup" onClick={(e) => e.stopPropagation()}>

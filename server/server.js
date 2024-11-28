@@ -780,63 +780,85 @@ app.get('/api/full_reports/all', (req, res) => {
 
 
 app.get('/api/accounts', (req, res) => {
-  const tables = ['user_details', 'responder_details', 'unit_details', 'police_details', 'barangay_details'];
-  const results = {};
-
-  const fetchAccounts = (index) => {
-    if (index >= tables.length) {
-      console.log('Results:', results); // Log the results
-      return res.status(200).json(results);
+  db.getConnection((err, connection) => {
+    if (err) {
+      console.error('Database connection error:', err);
+      return res.status(500).json({ message: 'Database connection error' });
     }
 
-    const table = tables[index];
-    const sql = `SELECT id, username, email FROM ${table}`;
-    db.getConnection((err, connection) => {
-      if (err) {
-        console.error('Error getting connection:', err);
-        return res.status(500).json({ message: 'Database connection error' });
+    const fetchAccounts = async () => {
+      try {
+        // Fetch accounts from all tables
+        const [user_details] = await connection.promise().query('SELECT * FROM user_details');
+        const [responder_details] = await connection.promise().query('SELECT * FROM responder_details');
+        const [unit_details] = await connection.promise().query('SELECT * FROM unit_details');
+        const [barangay_details] = await connection.promise().query('SELECT * FROM barangay_details');
+
+        return {
+          user_details,
+          responder_details,
+          unit_details,
+          barangay_details
+        };
+      } catch (error) {
+        throw error;
       }
+    };
 
-      connection.query(sql, (err, data) => {
+    // Get account details by ID
+    const getAccountDetails = async (table, id) => {
+      try {
+        const [results] = await connection.promise().query(
+          `SELECT * FROM ${table} WHERE id = ?`,
+          [id]
+        );
+        return results[0];
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    fetchAccounts()
+      .then(accounts => {
         connection.release();
-        if (err) {
-          console.error(`Error fetching accounts from ${table}:`, err);
-          return res.status(500).json({ message: `Error fetching accounts from ${table}` });
-        }
-        results[table] = data;
-        fetchAccounts(index + 1);
+        res.json(accounts);
+      })
+      .catch(error => {
+        connection.release();
+        console.error('Error fetching accounts:', error);
+        res.status(500).json({ message: 'Error fetching accounts' });
       });
-    });
-  };
-
-  fetchAccounts(0);
+  });
 });
 
 app.get('/api/accounts/:table/:id', (req, res) => {
   const { table, id } = req.params;
-  const validTables = ['user_details', 'responder_details', 'unit_details', 'police_details', 'barangay_details'];
+  const allowedTables = ['user_details', 'responder_details', 'unit_details', 'barangay_details'];
 
-  if (!validTables.includes(table)) {
+  if (!allowedTables.includes(table)) {
     return res.status(400).json({ message: 'Invalid table name' });
   }
 
-  const sql = `SELECT * FROM ${table} WHERE id = ?`;
   db.getConnection((err, connection) => {
     if (err) {
-      console.error('Error getting connection:', err);
+      console.error('Database connection error:', err);
       return res.status(500).json({ message: 'Database connection error' });
     }
 
+    const sql = `SELECT * FROM ${table} WHERE id = ?`;
     connection.query(sql, [id], (err, results) => {
       connection.release();
+      
       if (err) {
-        console.error(`Error fetching account details from ${table}:`, err);
-        return res.status(500).json({ message: `Error fetching account details from ${table}` });
+        console.error('Error fetching account details:', err);
+        return res.status(500).json({ message: 'Error fetching account details' });
       }
+
       if (results.length === 0) {
         return res.status(404).json({ message: 'Account not found' });
       }
-      res.status(200).json(results[0]);
+
+      res.json(results[0]);
     });
   });
 });
