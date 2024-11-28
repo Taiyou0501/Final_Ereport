@@ -107,10 +107,14 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    httpOnly: true,
-    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+    httpOnly: true
   }
 }));
+
+app.use((req, res, next) => {
+  console.log('Session data:', req.session);
+  next();
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -161,7 +165,8 @@ process.on('SIGINT', () => {
 
 app.post('/checkAllTables', (req, res) => {
   const { username, password } = req.body;
-  console.log('Login attempt:', { username, password });
+  console.log('Login attempt:', { username });
+  
   const tables = ['admin_details', 'user_details', 'police_details', 'responder_details', 'unit_details', 'barangay_details'];
   
   db.getConnection((err, connection) => {
@@ -170,11 +175,10 @@ app.post('/checkAllTables', (req, res) => {
       return res.status(500).json({ message: 'Database connection error' });
     }
 
-    // Use async/await to check tables sequentially
     const checkTable = async (tableIndex) => {
       if (tableIndex >= tables.length) {
         connection.release();
-        return res.send({ message: "Invalid Credentials" });
+        return res.status(401).json({ message: "Invalid Credentials" });
       }
 
       const table = tables[tableIndex];
@@ -189,18 +193,30 @@ app.post('/checkAllTables', (req, res) => {
         });
 
         if (results.length > 0) {
-          // Found a match, set session and return immediately
-          req.session.user = { username, table };
-          req.session.save(err => {
-            if (err) console.error('Error saving session:', err);
+          req.session.user = { 
+            username, 
+            table,
+            id: results[0].id 
+          };
+          
+          req.session.save((err) => {
+            if (err) {
+              console.error('Session save error:', err);
+              connection.release();
+              return res.status(500).json({ message: 'Session error' });
+            }
+            
+            console.log('Session saved:', req.session);
+            connection.release();
+            return res.json({ 
+              message: "Login Successful", 
+              table,
+              user: results[0]
+            });
           });
-          connection.release();
-          console.log('Login successful, sending response:', { message: "Login Successful", table });
-          return res.send({ message: "Login Successful", table });
+        } else {
+          return checkTable(tableIndex + 1);
         }
-
-        // No match in this table, check next table
-        return checkTable(tableIndex + 1);
       } catch (error) {
         connection.release();
         console.error(`Error querying table ${table}:`, error);
@@ -208,7 +224,6 @@ app.post('/checkAllTables', (req, res) => {
       }
     };
 
-    // Start checking tables from index 0
     checkTable(0);
   });
 });
@@ -842,30 +857,55 @@ app.get('/api/accounts/:table/:id', (req, res) => {
 });
 
 app.get('/checkSession', (req, res) => {
-  if (req.session.user) {
+  console.log('Session check requested:', req.session);
+  
+  if (req.session && req.session.user) {
     const { username, table } = req.session.user;
-    const sql = `SELECT * FROM ${table} WHERE username = ?`;
+    console.log('Session exists:', { username, table });
     
     db.getConnection((err, connection) => {
       if (err) {
         console.error('Error getting connection:', err);
-        return res.status(500).json({ message: 'Database connection error' });
+        return res.status(500).json({ 
+          isAuthenticated: false, 
+          message: 'Database connection error' 
+        });
       }
 
+      const sql = `SELECT * FROM ${table} WHERE username = ?`;
       connection.query(sql, [username], (err, results) => {
         connection.release();
+        
         if (err) {
-          console.error('Error fetching user details:', err);
-          return res.status(500).json({ message: 'Error fetching user details' });
+          console.error('Error checking user:', err);
+          return res.status(500).json({ 
+            isAuthenticated: false, 
+            message: 'Database error' 
+          });
         }
-        if (results.length === 0) {
-          return res.status(404).json({ message: 'User not found' });
+        
+        if (results.length > 0) {
+          console.log('User authenticated:', username);
+          return res.json({ 
+            isAuthenticated: true, 
+            user: results[0],
+            table: table 
+          });
+        } else {
+          console.log('User not found in database:', username);
+          return res.json({ 
+            isAuthenticated: false, 
+            message: 'User not found' 
+          });
         }
-        res.send({ isAuthenticated: true, user: results[0] });
       });
     });
   } else {
-    res.send({ isAuthenticated: false });
+    console.log('No session found');
+    return res.json({ 
+      isAuthenticated: false, 
+      message: 'No session' 
+    });
   }
 });
 

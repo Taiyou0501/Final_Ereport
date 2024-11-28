@@ -15,7 +15,12 @@ const ProtectedRoute = ({ children }) => {
       try {
         const response = await api.get('/checkSession');
         console.log('Session check response:', response.data);
-        setIsValid(response.data.isAuthenticated);
+        
+        if (response.data.isAuthenticated) {
+          setIsValid(true);
+        } else {
+          setIsValid(false);
+        }
       } catch (error) {
         console.error('Auth verification error:', error);
         setIsValid(false);
@@ -25,15 +30,14 @@ const ProtectedRoute = ({ children }) => {
     };
 
     verifyAuth();
-  }, []);
+  }, [location.pathname]);
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   if (!isAuthenticated || !isValid) {
-    console.log('Not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;
