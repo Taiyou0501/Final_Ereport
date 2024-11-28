@@ -1072,30 +1072,38 @@ app.get('/api/responder/report', (req, res) => {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  const sql = `SELECT reportId FROM ${user.table} WHERE username = ?`;
-  db.query(sql, [user.username], (err, results) => {
+  // First, get the responder's ID
+  const getResponderId = `SELECT id FROM ${user.table} WHERE username = ?`;
+  db.query(getResponderId, [user.username], (err, responderResults) => {
     if (err) {
-      console.error('Error fetching reportId:', err);
-      return res.status(500).json({ message: 'Error fetching reportId' });
-    }
-    if (results.length === 0 || !results[0].reportId) {
-      return res.status(404).json({ message: 'No report found for this responder' });
+      console.error('Error fetching responder ID:', err);
+      return res.status(500).json({ message: 'Error fetching responder ID' });
     }
 
-    const reportId = results[0].reportId;
-    const reportSql = `
-      SELECT id, type, latitude, longitude, victim, reporterId, location, 
-             description, uploadedAt, imageUrl, closestPoliceId, closestResponderId 
-      FROM full_report WHERE id = ?`;
+    if (responderResults.length === 0) {
+      return res.status(404).json({ message: 'Responder not found' });
+    }
+
+    const responderId = responderResults[0].id;
     
-    db.query(reportSql, [reportId], (err, reportResults) => {
+    // Then, find the report where this responder is assigned
+    const reportSql = `
+      SELECT * FROM full_report 
+      WHERE (closestResponderId = ? OR closestResponderId = CONCAT('responder_', ?))
+      OR (closestPoliceId = ? OR closestPoliceId = CONCAT('responder_', ?))
+      AND status = 'active'
+      ORDER BY id DESC LIMIT 1`;
+    
+    db.query(reportSql, [responderId, responderId, responderId, responderId], (err, reportResults) => {
       if (err) {
         console.error('Error fetching report details:', err);
         return res.status(500).json({ message: 'Error fetching report details' });
       }
+      
       if (reportResults.length === 0) {
-        return res.status(404).json({ message: 'Report not found' });
+        return res.status(404).json({ message: 'No report found for this responder' });
       }
+
       res.status(200).json(reportResults[0]);
     });
   });
