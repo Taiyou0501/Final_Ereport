@@ -904,27 +904,27 @@ app.get('/checkSession', (req, res) => {
 
 app.put('/api/full_report/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status, eta, barangay_eta, responderId } = req.body;
-
-  let finalStatus = status;
-  if (status === 'Responded' && responderId) {
-    finalStatus = `Responded by responder_${responderId}`;
-  }
-
+  const { status } = req.body;
+  
+  console.log('Updating report status:', { id, status });
+  
   db.getConnection((err, connection) => {
     if (err) {
       console.error('Error getting connection:', err);
       return res.status(500).json({ message: 'Database connection error' });
     }
 
-    const sql = 'UPDATE full_report SET status = ?, eta = ?, barangay_eta = ? WHERE id = ?';
-    connection.query(sql, [finalStatus, eta, barangay_eta, id], (err, result) => {
-      connection.release();
+    const sql = 'UPDATE full_report SET status = ? WHERE id = ?';
+    connection.query(sql, [status, id], (err, result) => {
+      connection.release(); // Always release the connection
+      
       if (err) {
         console.error('Error updating report status:', err);
         return res.status(500).json({ message: 'Error updating report status' });
       }
-      res.status(200).json({ message: 'Report status and ETA updated successfully' });
+      
+      console.log('Report status updated successfully');
+      res.status(200).json({ message: 'Report status updated successfully' });
     });
   });
 });
@@ -1125,27 +1125,27 @@ app.put('/api/responder/resetReport', (req, res) => {
 
 app.put('/api/full_report/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status, eta, barangay_eta, responderId } = req.body;
-
-  let finalStatus = status;
-  if (status === 'Responded' && responderId) {
-    finalStatus = `Responded by responder_${responderId}`;
-  }
-
+  const { status } = req.body;
+  
+  console.log('Updating report status:', { id, status });
+  
   db.getConnection((err, connection) => {
     if (err) {
       console.error('Error getting connection:', err);
       return res.status(500).json({ message: 'Database connection error' });
     }
 
-    const sql = 'UPDATE full_report SET status = ?, eta = ?, barangay_eta = ? WHERE id = ?';
-    connection.query(sql, [finalStatus, eta, barangay_eta, id], (err, result) => {
-      connection.release();
+    const sql = 'UPDATE full_report SET status = ? WHERE id = ?';
+    connection.query(sql, [status, id], (err, result) => {
+      connection.release(); // Always release the connection
+      
       if (err) {
         console.error('Error updating report status:', err);
         return res.status(500).json({ message: 'Error updating report status' });
       }
-      res.status(200).json({ message: 'Report status and ETA updated successfully' });
+      
+      console.log('Report status updated successfully');
+      res.status(200).json({ message: 'Report status updated successfully' });
     });
   });
 });
