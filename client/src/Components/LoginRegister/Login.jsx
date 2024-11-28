@@ -3,7 +3,7 @@ import "./Login.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import api from '../../config/axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 
 const Login = () => {
@@ -49,7 +49,8 @@ const Login = () => {
         alert("Invalid Credentials");
       }
     } catch (error) {
-      console.error(error);
+      console.error('Login error:', error);
+      alert(error.response?.data?.message || "An error occurred during login");
     }
   }
 
@@ -79,7 +80,7 @@ const Login = () => {
               Login
             </button>
             <div className="register-link-login">
-              <p>Don't have an account? <a href="/register">Create Account</a></p>
+              <p>Don't have an account? <Link to="/register">Create Account</Link></p>
             </div> 
           </form>
         </div>

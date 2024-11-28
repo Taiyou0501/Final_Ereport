@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./Register.css";
 import api from '../../config/axios';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const [values, setValues] = useState({
@@ -9,9 +10,10 @@ const Register = () => {
     username: '',
     email: '',
     password: '',
-    cpnumber: '' // Add CP number here
-  })
+    cpnumber: ''
+  });
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
@@ -32,7 +34,7 @@ const Register = () => {
         console.log('Response:', response.data);
         console.log("Registered Successfully");
         alert("Registered Successfully");
-        window.location.href = "/login";
+        navigate('/login');
     } catch (error) {
         console.error('Registration error:', error);
         if (error.response && error.response.data && error.response.data.message) {
@@ -68,13 +70,13 @@ const Register = () => {
               <input type="password" placeholder="Password" name='password' onChange={handleChange} />
             </div>
             <div className="inputbox">
-              <input type="text" placeholder="CP Number" name='cpnumber' onChange={handleChange} /> {/* Add CP number input */}
+              <input type="text" placeholder="CP Number" name='cpnumber' onChange={handleChange} />
             </div>
             <button className="btn-register" type="submit">
               Register
             </button>
             <div className="register-link">
-              <p>Already have an Account? <a href="/">Login</a></p>
+              <p>Already have an Account? <Link to="/login">Login</Link></p>
             </div>
           </form>
         </div>

@@ -2,10 +2,7 @@ import axios from 'axios';
 
 const baseURL = import.meta.env.MODE === 'development' 
     ? 'http://localhost:8081'
-    : import.meta.env.VITE_API_URL;
-
-console.log('Mode:', import.meta.env.MODE);
-console.log('Base URL:', baseURL);
+    : 'https://final-ereport.onrender.com';
 
 const api = axios.create({
     baseURL,
@@ -18,6 +15,7 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(request => {
     console.log('Starting Request:', request.url);
+    console.log('Request Headers:', request.headers);
     return request;
 });
 
@@ -28,7 +26,7 @@ api.interceptors.response.use(
         return response;
     },
     error => {
-        console.error('Response Error:', error);
+        console.error('Response Error:', error.response || error);
         return Promise.reject(error);
     }
 );
