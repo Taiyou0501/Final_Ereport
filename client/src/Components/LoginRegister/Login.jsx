@@ -63,9 +63,12 @@ const Login = () => {
         } else {
           setError('Session could not be established');
         }
+      } else {
+        alert('Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
+      alert(error.response?.data?.message || 'Invalid credentials');
       setError(error.response?.data?.message || 'An error occurred during login');
     } finally {
       setLoading(false);
