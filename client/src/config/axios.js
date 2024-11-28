@@ -8,8 +8,10 @@ const api = axios.create({
     baseURL,
     withCredentials: true,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    credentials: 'include'
 });
 
 // Add request interceptor for debugging

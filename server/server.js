@@ -18,21 +18,35 @@ const PORT = process.env.PORT || 8081;
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://last-ereport3.vercel.app'
+  'https://last-ereport3.vercel.app',
+  'https://final-ereport.onrender.com'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('Request origin:', origin);
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('Origin not allowed:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['set-cookie']
 }));
+
+app.options('*', cors());
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
 app.use(express.json());
 
 const db = mysql.createPool({
@@ -74,7 +88,8 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+    httpOnly: true,
+    domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
   }
 }));
 
