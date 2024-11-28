@@ -1,6 +1,6 @@
 // src/Logout.jsx
 import React from 'react';
-import axios from 'axios';
+import api from './config/axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,10 +11,10 @@ const Logout = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    axios.post('http://localhost:8081/logout', {}, { withCredentials: true })
+    api.post('/logout')
       .then(() => {
-        logout(); // Clear the authentication state
-        navigate('/login'); // Redirect to login page
+        logout();
+        navigate('/login');
       })
       .catch(err => {
         console.error('Error logging out', err);
