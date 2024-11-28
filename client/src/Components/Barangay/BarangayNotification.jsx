@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import UserLogout from '../../UserLogout';
+import api from '../../config/axios';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -55,15 +56,12 @@ const BarangayNotification = () => {
     useEffect(() => {
         const fetchReportDetails = async () => {
             try {
-                const response = await fetch('http://localhost:8081/api/barangay/report', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    setReportDetails(data);
-                    console.log('Report Details Fetched:', data);
+                const response = await api.get('/api/barangay/report');
+                if (response.status === 200) {
+                    setReportDetails(response.data);
+                    console.log('Report Details Fetched:', response.data);
                 } else {
-                    console.error('Error fetching report details:', data.message);
+                    console.error('Error fetching report details:', response.data.message);
                 }
             } catch (error) {
                 console.error('Error fetching report details:', error);
@@ -98,39 +96,30 @@ const BarangayNotification = () => {
         }
     }, [reportDetails, userPosition]);
 
-    const handleRespondClick = () => {
+    const handleRespondClick = async () => {
         setButtonClicked(true);
         console.log('Button Clicked:', buttonClicked);
         startCheckingDistance();
 
-        // Calculate ETA based on distance
         if (distance) {
             const averageSpeed = 60; // km/h
-            const etaMinutes = (distance / averageSpeed) * 60; // ETA in minutes
-            const roundedEta = Math.ceil(etaMinutes); // Round up to the nearest whole number
+            const etaMinutes = (distance / averageSpeed) * 60;
+            const roundedEta = Math.ceil(etaMinutes);
             setBarangayEta(roundedEta);
 
-            // Get barangay ID from session
-            fetch('http://localhost:8081/checkSession', {
-                credentials: 'include'
-            })
-            .then(response => response.json())
-            .then(sessionData => {
+            try {
+                // Get barangay ID from session
+                const sessionResponse = await api.get('/checkSession');
+                const sessionData = sessionResponse.data;
+
                 // Update closestBarangayId to show (RESPONDING)
-                fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/barangayStatus`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        closestBarangayId: `barangay_${sessionData.user.id} (RESPONDING)`,
-                        barangay_eta: roundedEta 
-                    }),
-                    credentials: 'include'
-                }).catch(error => {
-                    console.error('Error updating barangay status:', error);
+                await api.put(`/api/full_report/${reportDetails.id}/barangayStatus`, {
+                    closestBarangayId: `barangay_${sessionData.user.id} (RESPONDING)`,
+                    barangay_eta: roundedEta
                 });
-            });
+            } catch (error) {
+                console.error('Error updating barangay status:', error);
+            }
         }
     };
 
@@ -155,21 +144,12 @@ const BarangayNotification = () => {
                                 clearInterval(intervalRef.current);
                                 
                                 try {
-                                    const sessionResponse = await fetch('http://localhost:8081/checkSession', {
-                                        credentials: 'include'
-                                    });
-                                    const sessionData = await sessionResponse.json();
+                                    const sessionResponse = await api.get('/checkSession');
+                                    const sessionData = sessionResponse.data;
 
                                     // Update closestBarangayId to show (RESPONDED)
-                                    await fetch(`http://localhost:8081/api/full_report/${reportDetails.id}/barangayStatus`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({ 
-                                            closestBarangayId: `barangay_${sessionData.user.id} (RESPONDED)`
-                                        }),
-                                        credentials: 'include'
+                                    await api.put(`/api/full_report/${reportDetails.id}/barangayStatus`, {
+                                        closestBarangayId: `barangay_${sessionData.user.id} (RESPONDED)`
                                     });
                                     navigate('/barangay/final');
                                 } catch (error) {
@@ -183,7 +163,7 @@ const BarangayNotification = () => {
                     }
                 );
             }
-        }, 5000); // Check every 5 seconds
+        }, 5000);
     };
 
     useEffect(() => {

@@ -12,6 +12,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import UserLogout from '../../UserLogout';
+import api from '../../config/axios';  // Add this import
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -25,11 +26,10 @@ const LocationMarker = ({ setCurrentLocation }) => {
     const [currentLocation, setLocalCurrentLocation] = useState(null);
 
     useEffect(() => {
-        fetch('http://localhost:8081/api/full_reports/locations')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Fetched report locations:', data);
-                setReportLocations(data);
+        api.get('/api/full_reports/locations')
+            .then(response => {
+                console.log('Fetched report locations:', response.data);
+                setReportLocations(response.data);
             })
             .catch(error => console.error('Error fetching report locations:', error));
     }, []);
@@ -77,7 +77,13 @@ const LocationMarker = ({ setCurrentLocation }) => {
                         <Popup>
                             <div>
                                 <p>{location.type}</p>
-                                {location.imageUrl && <img src={`http://localhost:8081/${location.imageUrl}`} alt={location.type} style={{ width: '100px', height: '100px' }} />}
+                                {location.imageUrl && (
+                                    <img 
+                                        src={`${api.defaults.baseURL}/${location.imageUrl}`} 
+                                        alt={location.type} 
+                                        style={{ width: '100px', height: '100px' }} 
+                                    />
+                                )}
                             </div>
                         </Popup>
                     </Marker>
@@ -201,50 +207,32 @@ const Dashboard = () => {
     useEffect(() => {
         let interval;
         if (isActive && barangayId) {
-            interval = setInterval(() => {
-                fetch('http://localhost:8081/api/full_reports/closestBarangay', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ barangayId }),
-                    credentials: 'include',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.match) {
+            interval = setInterval(async () => {
+                try {
+                    // Check for closest barangay
+                    const checkResponse = await api.post('/api/full_reports/closestBarangay', {
+                        barangayId
+                    });
+
+                    if (checkResponse.data.match) {
                         setShowModal(true);
-                        // Update the barangay situation to 'ongoing' and save the reportId
-                        fetch(`http://localhost:8081/api/barangays/${barangayId}/situation`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ situation: 'ongoing' }),
-                            credentials: 'include',
-                        })
-                        .then(response => response.json())
-                        .then(() => {
-                            // Save the reportId to the barangay_details
-                            fetch(`http://localhost:8081/api/barangays/${barangayId}/report`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ reportId: data.reportId }),
-                                credentials: 'include',
-                            })
-                            .then(response => response.json())
-                            .then(() => {
-                                navigate('/barangay/notification');
-                            })
-                            .catch(error => console.error('Error updating barangay reportId:', error));
-                        })
-                        .catch(error => console.error('Error updating barangay situation:', error));
+                        
+                        // Update barangay situation
+                        await api.put(`/api/barangays/${barangayId}/situation`, {
+                            situation: 'ongoing'
+                        });
+
+                        // Save reportId to barangay_details
+                        await api.put(`/api/barangays/${barangayId}/report`, {
+                            reportId: checkResponse.data.reportId
+                        });
+
+                        navigate('/barangay/notification');
                     }
-                })
-                .catch(error => console.error('Error checking for reports:', error));
-            }, 5000); // Check every 5 seconds
+                } catch (error) {
+                    console.error('Error in report checking process:', error);
+                }
+            }, 5000);
         }
         return () => clearInterval(interval);
     }, [isActive, barangayId, navigate]);
@@ -301,7 +289,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
-            <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
         </div>
     );
 };
