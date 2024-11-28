@@ -128,21 +128,40 @@ const UserIndex = () => {
       const elapsedTime = currentTime - startTime;
 
       if (foundResponder) {
-        // Save report with found responder
-        fullReportData.closestResponderId = foundResponder;
-        await api.post('/api/full_report', fullReportData);
-        setClosestResponderId(foundResponder);
-        setHasSaved(true);
-        setNotification('Responder found and data saved successfully!');
-        setIsPolling(false);
+        // First save the report
+        try {
+          const response = await api.post('/api/full_report', fullReportData);
+          if (response.status !== 200) {
+            throw new Error('Failed to save report');
+          }
+          
+          setClosestResponderId(foundResponder);
+          setHasSaved(true);
+          setNotification('Responder found and data saved successfully!');
+          setIsPolling(false);
+        } catch (error) {
+          console.error('Error saving report:', error);
+          setNotification('Error saving report to database');
+          setIsPolling(false);
+        }
       } else if (elapsedTime >= 60000) { // 1 minute timeout
         // Save report with no responder available
-        fullReportData.closestResponderId = 'No responder available';
-        await api.post('/api/full_report', fullReportData);
-        setClosestResponderId('No responder available');
-        setHasSaved(true);
-        setNotification('No responder found within 1 minute. Data saved.');
-        setIsPolling(false);
+        try {
+          fullReportData.closestResponderId = 'No responder available';
+          const response = await api.post('/api/full_report', fullReportData);
+          if (response.status !== 200) {
+            throw new Error('Failed to save report');
+          }
+          
+          setClosestResponderId('No responder available');
+          setHasSaved(true);
+          setNotification('No responder found within 1 minute. Data saved.');
+          setIsPolling(false);
+        } catch (error) {
+          console.error('Error saving report:', error);
+          setNotification('Error saving report to database');
+          setIsPolling(false);
+        }
       } else {
         // Continue polling
         const timeoutId = setTimeout(() => pollForResponder(fullReportData, startTime), 3000);

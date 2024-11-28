@@ -698,68 +698,54 @@ app.get('/api/user-upload-id', (req, res) => {
 });
 
 app.post('/api/full_report', (req, res) => {
-  const { 
-    victim, 
-    reporterId, 
-    type, 
-    latitude, 
-    longitude, 
-    location, 
-    description, 
-    uploadedAt, 
-    imageUrl, 
-    status, 
-    closestResponderId, 
-    closestBarangayId,
-    closestPoliceId 
-  } = req.body;
+  const reportData = req.body;
   
-  console.log('Received full report data:', req.body);
-
-  const sql = `
-    INSERT INTO full_report (
-      victim, 
-      reporterId, 
-      type, 
-      latitude, 
-      longitude, 
-      location, 
-      description, 
-      uploadedAt, 
-      imageUrl, 
-      status, 
-      closestResponderId, 
-      closestBarangayId,
-      closestPoliceId
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
+  // Log the incoming data
+  console.log('Received report data:', reportData);
+  
   db.getConnection((err, connection) => {
     if (err) {
-      console.error('Error getting connection:', err);
+      console.error('Database connection error:', err);
       return res.status(500).json({ message: 'Database connection error' });
     }
 
-    connection.query(sql, [
-      victim, 
-      reporterId, 
-      type, 
-      latitude, 
-      longitude, 
-      location, 
-      description, 
-      uploadedAt, 
-      imageUrl, 
-      status, 
-      closestResponderId, 
-      closestBarangayId,
-      closestPoliceId 
-    ], (err, result) => {
+    const sql = `INSERT INTO full_report (
+      victim, reporterId, type, latitude, longitude, location, 
+      description, uploadedAt, imageUrl, status, 
+      closestResponderId, closestBarangayId, closestPoliceId
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const values = [
+      reportData.victim,
+      reportData.reporterId,
+      reportData.type,
+      reportData.latitude,
+      reportData.longitude,
+      reportData.location,
+      reportData.description,
+      reportData.uploadedAt,
+      reportData.imageUrl,
+      reportData.status,
+      reportData.closestResponderId,
+      reportData.closestBarangayId,
+      reportData.closestPoliceId
+    ];
+
+    connection.query(sql, values, (err, result) => {
       connection.release();
+      
       if (err) {
-        console.error('Error inserting full report:', err);
-        return res.status(500).json({ message: 'Error inserting full report' });
+        console.error('Error inserting report:', err);
+        return res.status(500).json({ 
+          message: 'Error inserting full report',
+          error: err.message 
+        });
       }
-      res.status(200).json({ message: 'Full report added successfully' });
+      
+      res.status(200).json({ 
+        message: 'Report saved successfully',
+        reportId: result.insertId 
+      });
     });
   });
 });
