@@ -108,24 +108,19 @@ const Dashboard = () => {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [barangayId, setBarangayId] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const navigate = useNavigate(); // Ensure navigate is declared before useEffect
+    const navigate = useNavigate();
 
-    const updateStatus = (status, latitude, longitude) => {
-        fetch('http://localhost:8081/api/account/status', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status, latitude, longitude }),
-            credentials: 'include',
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message);
-        })
-        .catch(error => {
+    const updateStatus = async (status, latitude, longitude) => {
+        try {
+            const response = await api.put('/api/account/status', {
+                status,
+                latitude,
+                longitude
+            });
+            console.log(response.data.message);
+        } catch (error) {
             console.error('Error updating status:', error);
-        });
+        }
     };
 
     const handleActive = () => {
@@ -184,24 +179,20 @@ const Dashboard = () => {
                 if (currentLocation) {
                     updateStatus('active', currentLocation.lat, currentLocation.lng);
                 }
-            }, 20000); // Update location every 20 seconds
+            }, 20000);
         }
         return () => clearInterval(interval);
     }, [isActive, currentLocation]);
 
     useEffect(() => {
         // Fetch the authenticated barangay ID
-        fetch('http://localhost:8081/checkSession', {
-            method: 'GET',
-            credentials: 'include',
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.isAuthenticated) {
-                setBarangayId(data.user.id);
-            }
-        })
-        .catch(error => console.error('Error fetching session data:', error));
+        api.get('/checkSession')
+            .then(response => {
+                if (response.data.isAuthenticated) {
+                    setBarangayId(response.data.user.id);
+                }
+            })
+            .catch(error => console.error('Error fetching session data:', error));
     }, []);
 
     useEffect(() => {

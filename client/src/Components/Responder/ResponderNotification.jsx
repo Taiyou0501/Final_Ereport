@@ -272,9 +272,13 @@ const Dashboard = () => {
                             )}
                         </div>
                         <div className="notif-picture-container">
-                        {reportDetails && reportDetails.imageUrl && (
-                            <img src={`http://localhost:8081/${reportDetails.imageUrl}`} alt="Scene Photo" className="scene-picture" />
-                        )}
+                            {reportDetails && reportDetails.imageUrl && (
+                                <img 
+                                    src={`${api.defaults.baseURL}/${reportDetails.imageUrl}`} 
+                                    alt="Scene Photo" 
+                                    className="scene-picture" 
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
