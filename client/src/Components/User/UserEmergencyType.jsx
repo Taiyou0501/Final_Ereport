@@ -1,6 +1,6 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../config/axios';
 import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
@@ -8,11 +8,9 @@ const UserIndex = () => {
 
   const handleFireEmergencyClick = async () => {
     try {
-      const response = await axios.post('http://localhost:8081/api/reports', {
+      const response = await api.post('/api/reports', {
         description: 'FIRE',
         type: 'Fire Emergency'
-      }, {
-        withCredentials: true // Include credentials in the request
       });
       console.log('Fire emergency report submitted:', response.data);
       navigate('/user/submission-success');

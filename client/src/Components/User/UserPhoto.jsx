@@ -6,6 +6,7 @@ import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
 import { isMobile } from 'react-device-detect';
 import UserLogout from '../../UserLogout';
+import api from '../../config/axios';
 
 const UserIndex = () => {
   const webcamRef = useRef(null);
@@ -78,23 +79,17 @@ const UserIndex = () => {
     formData.append('longitude', location.longitude);
   
     try {
-      const response = await fetch('http://localhost:8081/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      const response = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
       });
   
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to upload image: ${errorText}`);
-      }
-  
-      const data = await response.json();
-      console.log('Image uploaded successfully:', data);
-      return data.filePath;
+      console.log('Image uploaded successfully:', response.data);
+      return response.data.filePath;
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Error uploading image: ' + error.message);
+      alert('Error uploading image: ' + (error.response?.data || error.message));
     }
   };
 
