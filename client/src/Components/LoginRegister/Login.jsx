@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Login.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
@@ -25,43 +25,71 @@ const Login = () => {
       console.log('Login response:', response.data);
       
       if (response.data.message === "Login Successful") {
-        login(); // Set the authentication state
+        await login(); // Wait for login to complete
         
-        // Get the table from response
         const table = response.data.table;
         console.log('User type:', table);
 
-        // Define the redirect paths
-        const redirectPaths = {
-          'admin_details': '/admin/home',
-          'user_details': '/user/index',
-          'police_details': '/police/home',
-          'responder_details': '/responder/home',
-          'unit_details': '/unit/home',
-          'barangay_details': '/barangay/home'
-        };
-
-        const redirectPath = redirectPaths[table];
-        if (redirectPath) {
-          console.log('Attempting to redirect to:', redirectPath);
-          try {
-            await navigate(redirectPath, { replace: true });
-            console.log('Redirect successful');
-          } catch (navError) {
-            console.error('Navigation error:', navError);
-          }
-        } else {
-          setError('Invalid user type');
-          console.error('Unknown table type:', table);
+        // Use a switch statement for clearer routing logic
+        let redirectPath;
+        switch (table) {
+          case 'user_details':
+            redirectPath = '/user/index';
+            break;
+          case 'admin_details':
+            redirectPath = '/admin/home';
+            break;
+          case 'police_details':
+            redirectPath = '/police/home';
+            break;
+          case 'responder_details':
+            redirectPath = '/responder/home';
+            break;
+          case 'unit_details':
+            redirectPath = '/unit/home';
+            break;
+          case 'barangay_details':
+            redirectPath = '/barangay/home';
+            break;
+          default:
+            throw new Error('Unknown user type');
         }
-      } else {
-        alert('Invalid credentials');
+
+        console.log('Redirecting to:', redirectPath);
+        // Use navigate with state to force a refresh
+        navigate(redirectPath, { 
+          replace: true,
+          state: { from: 'login' }
+        });
+        
+        // Force a page reload if navigation doesn't work
+        setTimeout(() => {
+          if (window.location.pathname === '/login') {
+            window.location.href = redirectPath;
+          }
+        }, 100);
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert(error.response?.data?.message || 'An error occurred during login');
+      setError(error.response?.data?.message || 'An error occurred during login');
     }
   };
+
+  // Add this effect to check if we're stuck on login page
+  useEffect(() => {
+    const checkStuckOnLogin = async () => {
+      try {
+        const response = await api.get('/checkSession');
+        if (response.data.isAuthenticated) {
+          navigate('/user/index', { replace: true });
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      }
+    };
+
+    checkStuckOnLogin();
+  }, [navigate]);
 
   return (
     <div className="body-login">
