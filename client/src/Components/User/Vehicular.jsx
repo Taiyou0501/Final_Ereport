@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../config/axios';
 import UserLogout from '../../UserLogout';
 
 const UserIndex = () => {
@@ -17,7 +17,7 @@ const UserIndex = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          const response = await axios.post('http://localhost:8081/api/reports', {
+          const response = await api.post('/api/reports', {
             description: inputValue + ' vehicles involved',
             type: 'Vehicular Accident'
           }, {
@@ -47,7 +47,7 @@ const UserIndex = () => {
 
   const handleSkipClick = async () => {
     try {
-      const response = await axios.post('http://localhost:8081/api/reports', {
+      const response = await api.post('/api/reports', {
         description: 'Did not specify',
         type: 'Vehicular Accident'
       }, {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import axios from 'axios';
 import UserLogout from '../../UserLogout';
+import api from '../../config/axios';
 
 const UserIndex = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const UserIndex = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          const response = await axios.post('http://localhost:8081/api/reports', {
+          const response = await api.post('/api/reports', {
             description: inputValue,
             type: 'Others'
           }, {

@@ -2,7 +2,7 @@ import '../CSS/user.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserLogout from '../../UserLogout';
-import axios from 'axios';
+import api from '../../config/axios';
 
 const VictimName = () => {
     const navigate = useNavigate();
@@ -15,7 +15,7 @@ const VictimName = () => {
         if (showInput) {
             if (inputValue) {
                 try {
-                    const response = await axios.post('http://localhost:8081/api/update-victim-name', { victim_name: inputValue }, { withCredentials: true });
+                    const response = await api.post('/api/update-victim-name', { victim_name: inputValue }, { withCredentials: true });
                     if (response.status === 200) {
                         console.log('Submitted:', inputValue);
                         setSubmitted(true);

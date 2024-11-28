@@ -1,7 +1,7 @@
 import '../CSS/user.css';
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../config/axios';
 import UserLogout from '../../UserLogout';
 
 const Individual = () => {
@@ -14,7 +14,7 @@ const Individual = () => {
     if (showInput) {
       if (inputValue) {
         try {
-          const response = await axios.post('http://localhost:8081/api/reports', {
+          const response = await api.post('/api/reports', {
             description: inputValue,
             type: 'Injured Individual'
           }, {
@@ -35,7 +35,7 @@ const Individual = () => {
   
   const handleSkipClick = async () => {
     try {
-      const response = await axios.post('http://localhost:8081/api/reports', {
+      const response = await api.post('/api/reports', {
         description: 'Did not specify',
         type: 'Injured Individual'
       }, {

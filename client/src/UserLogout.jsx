@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from './config/axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,7 +17,7 @@ const Logout = () => {
   const [firstName, setFirstName] = useState('USER'); // State to store the first name
 
   useEffect(() => {
-    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
+    api.get('/checkSession')
       .then(response => {
         setFirstName(response.data.user.firstname); // Set the first name from the session data
       })
@@ -28,23 +28,23 @@ const Logout = () => {
 
   const handleLogout = () => {
     // First check the current session to get user details
-    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
+    api.get('/checkSession')
       .then(response => {
         const userRole = response.data.user.role;
         
         if (userRole === 'RESPONDER' || userRole === 'BARANGAY') {
           // First update the situation to unavailable
-          return axios.put('http://localhost:8081/api/account/status', {
+          return api.put('/api/account/status', {
             status: 'unavailable',
             latitude: 0,
             longitude: 0
-          }, { withCredentials: true });
+          });
         }
         return Promise.resolve();
       })
       .then(() => {
         // Then proceed with logout
-        return axios.post('http://localhost:8081/logout', {}, { withCredentials: true });
+        return api.post('/logout');
       })
       .then(() => {
         logout(); // Clear the authentication state
@@ -56,7 +56,7 @@ const Logout = () => {
   };
 
   const handleProfileClick = () => {
-    axios.get('http://localhost:8081/checkSession', { withCredentials: true })
+    api.get('/checkSession')
       .then(response => {
         setAccountDetails(response.data.user);
         setEditedDetails(response.data.user);
@@ -86,7 +86,7 @@ const Logout = () => {
   };
 
   const handleSaveClick = () => {
-    axios.put('http://localhost:8081/updateAccount', editedDetails, { withCredentials: true })
+    api.put('/updateAccount', editedDetails)
       .then(response => {
         setAccountDetails(editedDetails);
         setIsEditing(false);
