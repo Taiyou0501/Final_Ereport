@@ -87,20 +87,26 @@ const sessionStore = new MySQLStore({
   createDatabaseTable: true,
 }, db);
 
-app.use(session({
+// Update session configuration
+const sessionConfig = {
   key: 'session_cookie_name',
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
   store: sessionStore,
   resave: true,
   saveUninitialized: false,
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60 * 24,
-    httpOnly: true,
-    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
+    httpOnly: true
   }
-}));
+};
+
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // trust first proxy
+}
+
+app.use(session(sessionConfig));
 
 app.use((req, res, next) => {
   console.log('Session data:', req.session);
@@ -183,15 +189,15 @@ app.post('/checkAllTables', (req, res) => {
           table: currentTable
         };
 
-        // Save session explicitly
+        // Force session save
         req.session.save((err) => {
           if (err) {
             console.error('Session save error:', err);
             return res.status(500).json({ message: "Session error" });
           }
 
-          console.log('Session saved successfully:', req.session);
-          return res.json({
+          console.log('Session saved:', req.session);
+          res.json({
             message: "Login Successful",
             table: currentTable,
             sessionId: req.sessionID

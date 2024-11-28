@@ -18,41 +18,50 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await api.post('/checkAllTables', {
+      const loginResponse = await api.post('/checkAllTables', {
         username,
         password
       });
       
-      if (response.data.message === "Login Successful") {
-        await login();
-        const table = response.data.table;
+      console.log('Login response:', loginResponse.data);
+      
+      if (loginResponse.data.message === "Login Successful") {
+        const sessionResponse = await api.get('/checkSession');
+        console.log('Session check:', sessionResponse.data);
         
-        let redirectPath;
-        switch (table) {
-          case 'user_details':
-            redirectPath = '/user/index';
-            break;
-          case 'admin_details':
-            redirectPath = '/admin/home';
-            break;
-          case 'police_details':
-            redirectPath = '/police/home';
-            break;
-          case 'responder_details':
-            redirectPath = '/responder/home';
-            break;
-          case 'unit_details':
-            redirectPath = '/unit/home';
-            break;
-          case 'barangay_details':
-            redirectPath = '/barangay/home';
-            break;
-          default:
-            throw new Error('Unknown user type');
-        }
+        if (sessionResponse.data.isAuthenticated) {
+          await login();
+          const table = loginResponse.data.table;
+          
+          let redirectPath;
+          switch (table) {
+            case 'user_details':
+              redirectPath = '/user/index';
+              break;
+            case 'admin_details':
+              redirectPath = '/admin/home';
+              break;
+            case 'police_details':
+              redirectPath = '/police/home';
+              break;
+            case 'responder_details':
+              redirectPath = '/responder/home';
+              break;
+            case 'unit_details':
+              redirectPath = '/unit/home';
+              break;
+            case 'barangay_details':
+              redirectPath = '/barangay/home';
+              break;
+            default:
+              throw new Error('Unknown user type');
+          }
 
-        if (redirectPath) {
-          navigate(redirectPath, { replace: true });
+          if (redirectPath) {
+            navigate(redirectPath, { replace: true });
+          }
+        } else {
+          setError('Session could not be established');
         }
       }
     } catch (error) {
