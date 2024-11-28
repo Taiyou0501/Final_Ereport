@@ -71,7 +71,7 @@ const AdminReports = () => {
   };
 
   const formatDate = (dateString) => {
-    return moment(dateString).add(12, 'hours').format('M/D/YYYY, h:mm:ss A');
+    return moment(dateString).format('M/D/YYYY, h:mm:ss A');
   };
 
   return (
@@ -149,7 +149,11 @@ const AdminReports = () => {
                 )}
                 {selectedReport.imageUrl && (
                   <div>
-                    <img src={`http://localhost:8081/${selectedReport.imageUrl}`} alt="Report" className="small-image" />
+                    <img 
+                      src={`${api.defaults.baseURL}/${selectedReport.imageUrl}`} 
+                      alt="Report" 
+                      className="small-image" 
+                    />
                   </div>
                 )}
                 <button className="btn-back" onClick={() => setSelectedReport(null)}>Back to Reports</button>
