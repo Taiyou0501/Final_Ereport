@@ -24,7 +24,7 @@ const Login = () => {
       console.log('Login response:', response.data);
       
       if (response.data.message === "Login Successful") {
-        await login(); // Wait for login to complete
+        await login();
         
         const table = response.data.table;
         console.log('User type:', table);
@@ -54,24 +54,12 @@ const Login = () => {
         }
 
         if (redirectPath) {
-          console.log('Attempting to redirect to:', redirectPath);
-          // First try using navigate
           navigate(redirectPath, { replace: true });
-          
-          // If that doesn't work, try window.location after a short delay
-          setTimeout(() => {
-            if (window.location.pathname === '/login') {
-              console.log('Forcing redirect via window.location');
-              window.location.href = redirectPath;
-            }
-          }, 500);
         }
-      } else {
-        alert('Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert(error.response?.data?.message || 'An error occurred during login');
+      setError(error.response?.data?.message || 'An error occurred during login');
     }
   };
 
