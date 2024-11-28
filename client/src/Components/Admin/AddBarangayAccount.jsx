@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import '../CSS/Dashboard.css';
 import logo from'../Assets/newbackground.jpg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faFile, faUsers, faCircleUser, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
+import { faHouse, faFile, faUsers, faCircleUser } from '@fortawesome/free-solid-svg-icons'
 import api from '../../config/axios';
 import Logout from "../../Logout";
 
-const AdminDashboard = () => {
+const AddBarangay = () => {
   const [values, setValues] = useState({
     firstname: '',
     lastname: '',
@@ -15,34 +15,27 @@ const AdminDashboard = () => {
     email: '',
     username: '',
     password: '',
-    cpnumber: '' // Add CP number here
-  })
+    cpnumber: ''
+  });
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(values);
-    api.post('/a-add-barangay', values)
-      .then(res => {
-        console.log("Barangay added successfully");
-        alert("Barangay added successfully");
-        navigate("/admin/accounts");
-      })
-      .catch(err => {
-        console.log(err);
-        if (err.response && err.response.data && err.response.data.message) {
-          setError(err.response.data.message);
-        } else {
-          setError('An error occurred. Please try again.');
-        }
-      });
+    try {
+      const response = await api.post('/a-add-barangay', values);
+      console.log("Barangay added successfully");
+      alert("Barangay added successfully");
+      navigate("/admin/accounts");
+    } catch (err) {
+      console.error('Error adding barangay:', err);
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
+    }
   };
-
-  const navigate = useNavigate();
 
   const handleNavigation = (path) => {
     navigate(path, { replace: true });
@@ -137,4 +130,4 @@ const AdminDashboard = () => {
   );
 }
 
-export default AdminDashboard;
+export default AddBarangay;

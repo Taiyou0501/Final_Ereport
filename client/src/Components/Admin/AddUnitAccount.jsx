@@ -15,7 +15,7 @@ const AddUnit = () => {
     email: '',
     username: '',
     password: '',
-    cpnumber: '' // Add CP number here
+    cpnumber: ''
   })
   const [error, setError] = useState('');
 

@@ -64,10 +64,10 @@ const AdminDashboard = () => {
         <div className="text">Dashboard</div>
         <div className="text">Welcome, Admin</div>
         <div className="tabs-admin-accounts">
-        <div class="home-wrapper">
-                    <button className="create-account"onClick={() =>handleNavigation('/admin/add-unit')}>Unit</button>
-                    <button className="create-account"onClick={() => handleNavigation('/admin/add-barangay')}>Barangay</button>
-        </div>
+          <div className="home-wrapper">
+            <button className="create-account" onClick={() => handleNavigation('/admin/add-unit')}>Unit</button>
+            <button className="create-account" onClick={() => handleNavigation('/admin/add-barangay')}>Barangay</button>
+          </div>
         </div>
       </section>
     </div>
